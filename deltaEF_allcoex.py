@@ -12,7 +12,7 @@ from timeit import default_timer as timer
 import community_construction as community
 
 counter1,counter2=0,0 #count # ecosystems with positive/negative change in EF
-iterations = int(100000)   #number of random ecosystems
+iterations = int(10000)   #number of random ecosystems
 rel_delta_EF = np.zeros([iterations]) #saves \DeltaEF/EF
 neg_para = np.zeros([iterations,7]) # saves the parameters in negative change ecosystems
 neg_delta_EF = np.zeros(iterations) # saves rel_delta_EF in cases it is negative
@@ -31,7 +31,8 @@ axis = [[0,1],[0,1/np.sqrt(3)], [-1/np.sqrt(3),1/np.sqrt(3)], [-1/np.sqrt(3),1/n
 print("estimated time: ", iterations /10000*2)
 start=timer()
 for i in range(iterations):
-    parameters = community.rand_par_coex() # generate random community
+    parameters = community.rand_par_coex(ave_min = -0.05, e_min = -0.1, 
+                                         max_alpha = 0.1) # generate random community
     para[i]=parameters #save all parameters
     rel_delta_EF[i] = community.rel_delta_EF_coex(*parameters)
     if rel_delta_EF[i] < -100: #mistake happend
@@ -65,3 +66,4 @@ pos_min_comp = [1-pos_paras[4][i] for i in range(len(pos_paras[4]))]
 neg_min_comp = [1-neg_paras[4][i] for i in range(len(neg_paras[4]))]
 
 zero_delta_EF = [min(0,i) for i in rel_delta_EF]
+plot_percentiles([save,rel_delta_EF],labels = ["ref", "ave_min = -0.05, e_min = -0.1,alpha_max = 0.1"],save = "both together", y_min = -100, y_max = 100)

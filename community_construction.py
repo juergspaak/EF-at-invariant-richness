@@ -10,6 +10,7 @@ and calculate its deltaEF
 import numpy as np
 import numpy.random as rand
 
+
 sqrt = np.sqrt(3)
 n = 20
 
@@ -140,11 +141,12 @@ def rel_delta_EF_repl(avmuc,t_muc, avmur, t_mur, avmus, t_mus, avec, \
 
     return 100*(EF_s-EF_r)/EF_r
 
-def rand_par_coex(count = False):
+def rand_par_coex(count = False, max_alpha = -0.05, 
+                  ave_min = 0.0,e_min = 0.0):
     """ returns randomized parameters for one community"""
     
-    ave = rand.uniform(0,0.5) # average sensitivity, in [0.01, 0.99]
-    alpha = rand.uniform(-0.95,-0.05)
+    ave = rand.uniform(ave_min,0.5) # average sensitivity, in [0.01, 0.99]
+    alpha = rand.uniform(-0.95,max_alpha)
     counter = 0 # counts the number of tries to find a community
     parameters = 0
     while not (counter and coex_test_coex(*parameters)):
@@ -154,26 +156,27 @@ def rand_par_coex(count = False):
         n = int(rand.uniform(5,21))
         comp = -alpha*n/(1-alpha*(n-1)) #effective competition , computed
         t_mu = rand.uniform(comp-1,1-comp)/sqrt
-        minimum = min(1,1/ave-1)
+        minimum = min(np.abs([1/ave-1, 1-e_min/ave]))
         t_e = rand.uniform(-minimum/sqrt,minimum/sqrt)
-        
-        
         parameters = ave,t_e,t_mu,t_f,comp,alpha,n
         counter +=1
+
     if count:
         return counter, ave
     else: 
         return ave,t_e,t_mu,t_f,comp,alpha,n  #alpha and n are just passed for convenience
-    
+
 def coex_test_coex(ave,t_e,t_mu,t_f,comp,alpha,n):
     """tests if coexistence is given in stessed site
     returns True, iff coexistence is guaranteed
     min_coex tests the species with minimal mu_i (assuming t_mu>0)"""
-    min_coex = (1+sqrt*t_mu)*(1/ave-1-sqrt*t_e) \
-                > comp*(1/ave-1-t_mu*t_e) 
-    max_coex = (1-sqrt*t_mu)*(1/ave-1+sqrt*t_e) \
-                > comp*(1/ave-1-t_mu*t_e)
-    return min_coex and max_coex 
+    sign = np.sign(ave)
+    
+    min_coex = (1+sqrt*t_mu)*(1/ave-1-sign*sqrt*t_e) \
+                /(1/ave-1-t_mu*t_e)
+    max_coex = (1-sqrt*t_mu)*(1/ave-1+sign*sqrt*t_e) \
+                /(1/ave-1-t_mu*t_e)
+    return min_coex>comp and max_coex>comp 
     
 def rel_delta_EF_coex(ave,t_e,t_mu,t_f,comp,alpha,n, adjust = True):
     """ computes \DetalEF/EF for one ecosystem
