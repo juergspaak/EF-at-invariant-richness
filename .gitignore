@@ -1,5 +1,9 @@
 *.npz
-__pycache__*
+
+__pycache__/
+
 Figure*
 
 test*
+*/*.pyc
+*.pyc
