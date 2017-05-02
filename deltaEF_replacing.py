@@ -19,7 +19,7 @@ numb_par = 19
 para = np.zeros([iterations,numb_par])
 for i in range(iterations):
     para[i] = community.rand_par_repl()
-    save[i]=min(community.rel_delta_EF_repl(*para[i]),1)
+    save[i]=community.rel_delta_EF_repl(*para[i])
     
 end=timer()
 print(end-start)

@@ -14,7 +14,8 @@ import numpy.random as rand
 sqrt = np.sqrt(3)
 n = 20
 
-def rand_par_repl(count=False):
+def rand_par_repl(count=False, ave_max = 0.5, e_max = 1,
+                  ave_min = -0.5, e_min = -1):
     """ returns randomized parameters for one ecosystem
     av means average, t_ means stdv/average,
     t values are always between -1/sqrt(3), 1/sqrt(3)
@@ -29,7 +30,7 @@ def rand_par_repl(count=False):
     avfs = rands[5]+0.5
     
     counter1,counter2=0,0
-    avec = rand.uniform(0,0.5)
+    avec = rand.uniform(ave_min,ave_max)
     alpha = rand.uniform(-0.95,-0.05) # interaction coecfficient
     comp = -alpha*n/(1-alpha*(n-1)) #effective competition , computed
     p = int(rand.uniform(0,n-1)+1)/n
@@ -55,12 +56,14 @@ def rand_par_repl(count=False):
         dist = min(treshhold/avmus-1, 1-treshhold2/avmus)/sqrt
         t_mus = rand.uniform(-dist,dist)
         
-        treshhold = max(1-avmuc/avmus*(1-avec)*(1-comp*p)/(q*comp),0)
-        treshhold2 = min(1-avmuc/avmus*(1-avec)/(1-comp*q)*(p*comp),0.5)
+        treshhold = max(1-avmuc/avmus*(1-avec)*(1-comp*p)/(q*comp),ave_min)
+        treshhold2 = min(1-avmuc/avmus*(1-avec)/(1-comp*q)*(p*comp),ave_max)
         aves = rand.uniform(treshhold, treshhold2)
         # 0<ec<1
-        t_ec = 2*rands[9]/sqrt*min(1,1/avec-1)- 1/sqrt*min(1,1/avec-1)
-        t_es = 2*rands[10]/sqrt*min(1,1/aves-1)- 1/sqrt*min(1,1/aves-1)
+        minimum = min(np.abs([e_max/avec-1, 1-e_min/avec]))
+        t_ec = rand.uniform(-minimum/sqrt,minimum/sqrt)
+        minimum = min(np.abs([e_max/aves-1, 1-e_min/aves]))
+        t_es = rand.uniform(-minimum/sqrt,minimum/sqrt)
         
         # reference types can't coexist            
         #aver = 1#1-treshhold*comp/avmur*rands[11]
@@ -87,18 +90,18 @@ def coex_test_repl(avmuc,t_muc, avmur, t_mur, avmus, t_mus, avec, \
               t_ec, aves,t_es,comp,t_fc,t_fr,t_fs, \
               avfc,avfr,avfs,alpha,p):
     """tests if coexistence is given in stessed site"""
-    # coex in reference site
     q = 1-p
+    sign_c, sign_s = np.sign([avec, aves])
     
     # coex in stressed site
     avmuc_s = avmuc*avec*(1/avec-1 - t_muc*t_ec)
     avmus_s = avmus*aves*(1/aves-1 - t_mus*t_es)
-    treshhold = comp*(p*avmuc_s+q*avmus_s)
+    
     # extrema on boundaries:
-    minimalc1 = avmuc*(1+sqrt*t_muc)*avec*(1/avec-(1+sqrt*t_ec))
-    minimalc2 = avmuc*(1-sqrt*t_muc)*avec*(1/avec-(1-sqrt*t_ec))
-    minimals1 = avmus*(1+sqrt*t_mus)*aves*(1/aves-(1+sqrt*t_es))
-    minimals2 = avmus*(1-sqrt*t_mus)*aves*(1/aves-(1-sqrt*t_es))
+    minimalc1 = avmuc*(1+sqrt*t_muc)*avec*(1/avec-(1+sign_c*sqrt*t_ec))
+    minimalc2 = avmuc*(1-sqrt*t_muc)*avec*(1/avec-(1-sign_c*sqrt*t_ec))
+    minimals1 = avmus*(1+sqrt*t_mus)*aves*(1/aves-(1+sign_s*sqrt*t_es))
+    minimals2 = avmus*(1-sqrt*t_mus)*aves*(1/aves-(1-sign_s*sqrt*t_es))
     """The following checks whether r species are extinct, only necessary if aver != 0
     maximalr1 = avmur*(1+sqrt*t_mur)*aver*(1/aver-(1+sqrt*t_er))
     maximalr2 = avmur*(1-sqrt*t_mur)*aver*(1/aver-(1-sqrt*t_er))
@@ -108,9 +111,10 @@ def coex_test_repl(avmuc,t_muc, avmur, t_mur, avmus, t_mus, avec, \
         maximalr1 = max(maximalr1, 
                         avmur*(1+loc_r*sqrt*t_mur)*aver*(1/aver-(1+loc_r*sqrt*t_er)))"""
     
-    minimal = min(minimalc1,minimalc2, minimals1, minimals2)
+    minimal = min(minimalc1,minimalc2, minimals1, minimals2)\
+                    /(p*avmuc_s+q*avmus_s)
     #maximal = max(maximalr1, maximalr2)
-    if minimal<treshhold:# or maximal>treshhold:
+    if minimal<comp:# or maximal>treshhold:
         return False
     else:
         return True
@@ -141,12 +145,12 @@ def rel_delta_EF_repl(avmuc,t_muc, avmur, t_mur, avmus, t_mus, avec, \
 
     return 100*(EF_s-EF_r)/EF_r
 
-def rand_par_coex(count = False, max_alpha = -0.05, 
-                  ave_min = 0.0,e_min = 0.0):
+def rand_par_coex(count = False, ave_max = 0.5, e_max = 1,
+                  ave_min = -0.5,e_min = -1):
     """ returns randomized parameters for one community"""
     
-    ave = rand.uniform(ave_min,0.5) # average sensitivity, in [0.01, 0.99]
-    alpha = rand.uniform(-0.95,max_alpha)
+    ave = rand.uniform(ave_min,ave_max) # average sensitivity, in [0.01, 0.99]
+    alpha = rand.uniform(-0.95,-0.05)
     counter = 0 # counts the number of tries to find a community
     parameters = 0
     while not (counter and coex_test_coex(*parameters)):
@@ -156,7 +160,7 @@ def rand_par_coex(count = False, max_alpha = -0.05,
         n = int(rand.uniform(5,21))
         comp = -alpha*n/(1-alpha*(n-1)) #effective competition , computed
         t_mu = rand.uniform(comp-1,1-comp)/sqrt
-        minimum = min(np.abs([1/ave-1, 1-e_min/ave]))
+        minimum = min(np.abs([e_max/ave-1, 1-e_min/ave]))
         t_e = rand.uniform(-minimum/sqrt,minimum/sqrt)
         parameters = ave,t_e,t_mu,t_f,comp,alpha,n
         counter +=1

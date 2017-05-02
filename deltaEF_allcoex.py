@@ -12,7 +12,7 @@ from timeit import default_timer as timer
 import community_construction as community
 
 counter1,counter2=0,0 #count # ecosystems with positive/negative change in EF
-iterations = int(10000)   #number of random ecosystems
+iterations = int(1e5)   #number of random ecosystems
 rel_delta_EF = np.zeros([iterations]) #saves \DeltaEF/EF
 neg_para = np.zeros([iterations,7]) # saves the parameters in negative change ecosystems
 neg_delta_EF = np.zeros(iterations) # saves rel_delta_EF in cases it is negative
@@ -31,8 +31,8 @@ axis = [[0,1],[0,1/np.sqrt(3)], [-1/np.sqrt(3),1/np.sqrt(3)], [-1/np.sqrt(3),1/n
 print("estimated time: ", iterations /10000*2)
 start=timer()
 for i in range(iterations):
-    parameters = community.rand_par_coex(ave_min = -0.05, e_min = -0.1, 
-                                         max_alpha = 0.1) # generate random community
+    parameters = community.rand_par_coex(ave_max = 0.5,e_max = 1,
+                                         ave_min = 0, e_min = 0) # generate random community
     para[i]=parameters #save all parameters
     rel_delta_EF[i] = community.rel_delta_EF_coex(*parameters)
     if rel_delta_EF[i] < -100: #mistake happend
