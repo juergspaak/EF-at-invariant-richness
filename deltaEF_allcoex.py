@@ -31,8 +31,8 @@ axis = [[0,1],[0,1/np.sqrt(3)], [-1/np.sqrt(3),1/np.sqrt(3)], [-1/np.sqrt(3),1/n
 print("estimated time: ", iterations /10000*2)
 start=timer()
 for i in range(iterations):
-    parameters = community.rand_par_coex(ave_max = 0.5,e_max = 1,
-                                         ave_min = 0, e_min = 0) # generate random community
+    parameters = community.rand_par_coex(ave_max = 0.0,e_max = 0,
+                                         ave_min = -0.5, e_min = -1) # generate random community
     para[i]=parameters #save all parameters
     rel_delta_EF[i] = community.rel_delta_EF_coex(*parameters)
     if rel_delta_EF[i] < -100: #mistake happend

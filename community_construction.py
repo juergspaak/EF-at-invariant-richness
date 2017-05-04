@@ -14,7 +14,7 @@ import numpy.random as rand
 sqrt = np.sqrt(3)
 n = 20
 
-def rand_par_repl(count=False, ave_max = 0.5, e_max = 1,
+def rand_par_repl(count=False,p = 'rand', ave_max = 0.5, e_max = 1,
                   ave_min = -0.5, e_min = -1):
     """ returns randomized parameters for one ecosystem
     av means average, t_ means stdv/average,
@@ -33,8 +33,8 @@ def rand_par_repl(count=False, ave_max = 0.5, e_max = 1,
     avec = rand.uniform(ave_min,ave_max)
     alpha = rand.uniform(-0.95,-0.05) # interaction coecfficient
     comp = -alpha*n/(1-alpha*(n-1)) #effective competition , computed
-    p = int(rand.uniform(0,n-1)+1)/n
-    p = 0.95
+    if p is 'rand':
+        p = int(rand.randint(1,19))/n
     q = 1-p
     
     parameters = 0
@@ -74,7 +74,7 @@ def rand_par_repl(count=False, ave_max = 0.5, e_max = 1,
             avec = rand.uniform(0,0.5)
             alpha = rand.uniform(-0.95,-0.05) # interaction coecfficient
             comp =  -alpha*n/(1-alpha*(n-1))
-            
+        
         parameters = avmuc,t_muc, avmur, t_mur, avmus, t_mus, avec, \
               t_ec, aves,t_es,comp,t_fc,t_fr,t_fs, \
               avfc,avfr,avfs,alpha,p
@@ -96,12 +96,13 @@ def coex_test_repl(avmuc,t_muc, avmur, t_mur, avmus, t_mus, avec, \
     # coex in stressed site
     avmuc_s = avmuc*avec*(1/avec-1 - t_muc*t_ec)
     avmus_s = avmus*aves*(1/aves-1 - t_mus*t_es)
-    
+    mu_str = lambda avmu, tmu, ave, te, u_i: \
+                    avmu*(1+u_i*tmu*sqrt)*ave*(1/ave-(1+u_i*te*sqrt))
     # extrema on boundaries:
-    minimalc1 = avmuc*(1+sqrt*t_muc)*avec*(1/avec-(1+sign_c*sqrt*t_ec))
-    minimalc2 = avmuc*(1-sqrt*t_muc)*avec*(1/avec-(1-sign_c*sqrt*t_ec))
-    minimals1 = avmus*(1+sqrt*t_mus)*aves*(1/aves-(1+sign_s*sqrt*t_es))
-    minimals2 = avmus*(1-sqrt*t_mus)*aves*(1/aves-(1-sign_s*sqrt*t_es))
+    minimalc1 = mu_str(avmuc, t_muc, avec, t_ec,1)
+    minimalc2 = mu_str(avmuc, t_muc, avec, t_ec,-1)    
+    minimals1 = mu_str(avmus, t_mus, aves, t_es,1)
+    minimals2 = mu_str(avmus, t_mus, aves, t_es,-1)
     """The following checks whether r species are extinct, only necessary if aver != 0
     maximalr1 = avmur*(1+sqrt*t_mur)*aver*(1/aver-(1+sqrt*t_er))
     maximalr2 = avmur*(1-sqrt*t_mur)*aver*(1/aver-(1-sqrt*t_er))
@@ -173,13 +174,11 @@ def rand_par_coex(count = False, ave_max = 0.5, e_max = 1,
 def coex_test_coex(ave,t_e,t_mu,t_f,comp,alpha,n):
     """tests if coexistence is given in stessed site
     returns True, iff coexistence is guaranteed
-    min_coex tests the species with minimal mu_i (assuming t_mu>0)"""
-    sign = np.sign(ave)
-    
-    min_coex = (1+sqrt*t_mu)*(1/ave-1-sign*sqrt*t_e) \
-                /(1/ave-1-t_mu*t_e)
-    max_coex = (1-sqrt*t_mu)*(1/ave-1+sign*sqrt*t_e) \
-                /(1/ave-1-t_mu*t_e)
+    min_coex tests the species with minimal mu_i (assuming t_mu>0)"""    
+    mu_str = lambda tmu, ave, te, u_i: \
+                    (1+u_i*tmu*sqrt)*(1/ave-(1+u_i*te*sqrt))
+    min_coex = mu_str(t_mu, ave, t_e,1)/(1/ave-1-t_mu*t_e)
+    max_coex = mu_str(t_mu, ave, t_e,-1)/(1/ave-1-t_mu*t_e)
     return min_coex>comp and max_coex>comp 
     
 def rel_delta_EF_coex(ave,t_e,t_mu,t_f,comp,alpha,n, adjust = True):
