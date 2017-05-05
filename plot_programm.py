@@ -49,12 +49,25 @@ plot_percentiles([npz_avmue['delta_EF'], 100*npz['delta_EF_p50']],  y_label = yl
 lab3 = ["p = 1.00,", "p = 0.95", "p = 0.50", "p is random", "p = 0.05",
         "p = 1.00, e<0,", "p = 0.95,e<0", "p = 0.50,e<0",
         "p is random,e<0", "p = 0.05,e<0"]
-ls = ['-','-','-','-','-','--','--','--','--','--' ]
+        
+marker = ['o','o','o','o','o','v','v','v','v','v']
 color = 2*["blue", "green", "red", "cyan", "magenta"]
-fig,ax = plot_percentiles(deltl, labels = lab3, y_label = yl, grid = False, 
-                 save = "delta_EF, different p,2", ordered_keys = key_ord,
-                 y_max = 100,ls =ls,color = color)
-ax.legend(loc = "upper left", bbox_to_anchor = (1,1))
+k = sorted(deltl.keys())
+ord_keys = [k[1], k[3], k[2], k[9],k[0], k[4],k[7], k[6], k[8], k[5]]
+fig,ax = plot_percentiles(deltl, y_label = yl, grid = False, 
+                 y_max = 100,marker =marker,color = color,
+                 ordered_keys = ord_keys)
+simArtist = plt.Line2D((0,1),(0,0), color='k', marker='o', linestyle='')
+anyArtist = plt.Line2D((0,2),(0,0), color='k',marker='v', linestyle='')
+handles, labels = ax.get_legend_handles_labels()
+display = range(5)
+for i in range(5):
+    handles[i] = plt.Line2D((0,2),(0,0), color=color[i])
+labels = ["p = 1.00,", "p = 0.95", "p = 0.50", "p is random", "p = 0.05"]
+ax.legend(loc = "upper left")
+ax.legend([handle for i,handle in enumerate(handles) if i in display]+[simArtist,anyArtist],
+          labels+['e<0', 'e>0']
+           ,loc = "upper left", numpoints = 1)
 fig.savefig("Figure, percentiles delta_EF, different p,2.pdf", dpi=fig.dpi)
 
 """ for the covariances"""

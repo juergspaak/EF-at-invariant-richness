@@ -50,9 +50,9 @@ def rand_par_repl(count=False,p = 'rand', ave_max = 0.5, e_max = 1,
         t_mur = rand.uniform(-(1-treshhold/avmur)/sqrt,(1-treshhold/avmur)/sqrt)
         # chosen such that max(mus) < treshhold, i.e. can't coexist
         
-        treshhold2 = avmuc*(1-avec)*p*comp/(1-comp*q)
-        safty = 0.0*(treshhold -treshhold2)/2
-        avmus = rand.uniform(treshhold2+safty,treshhold-safty)
+        treshhold2 = avmuc*(1-avec)*p*comp/(1-comp*q)/(1-ave_min)
+        # we always have treshhold2<treshhold
+        avmus = rand.uniform(treshhold2,treshhold)
         dist = min(treshhold/avmus-1, 1-treshhold2/avmus)/sqrt
         t_mus = rand.uniform(-dist,dist)
         
