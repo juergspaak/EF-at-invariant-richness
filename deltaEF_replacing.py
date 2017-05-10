@@ -10,7 +10,7 @@ from timeit import default_timer as timer
 import numpy as np
 
 import community_construction as community
-def run_programm(p, iterations= int(1e5), save =  False):
+def run_programm(p, iterations= int(1e3), savenpz =  False):
     save = np.zeros(iterations)
     print("estimated time" , iterations*6/1000)
     start = timer()
@@ -21,7 +21,7 @@ def run_programm(p, iterations= int(1e5), save =  False):
         save[i]=community.rel_delta_EF_repl(*para[i])
         if (i % 10000)==0:
             print(p,i, "done")
-            if save:
+            if savenpz:
                 np.savez("npz, repl, neg e, p="+str(p)+",savety.npz",
                      rel_delta_EF = save[:i], para = para[:i])
         
@@ -34,7 +34,7 @@ def run_programm(p, iterations= int(1e5), save =  False):
     labels = [r'$\bar{\mu^c}$',r'$t_{\mu^c}$', r'$\bar{\mu^r}$',r'$t_{\mu^r}$', r'$\bar{\mu^s}$',r'$t_{\mu^s}$',\
               r'$\bar{e^c}$',r'$t_{e^c}$', r'$\bar{e^s}$',r'$t_{e^s}$',r'$C_\alpha^n$',r'$t_{f^c}$',r'$t_{f^r}$',\
               r'$t_{f^s}$',"avfc","avfr","avfs",r'$\alpha$',r'$p$']
-    if save:
+    if savenpz:
         np.savez("npz, repl, neg e, p="+str(p)+".npz",
                     paras =paras,rel_delta_EF = save, para = para)
     return save,para, paras
@@ -48,8 +48,7 @@ labels = [r'$\bar{\mu^c}$',r'$t_{\mu^c}$', r'$\bar{\mu^r}$',r'$t_{\mu^r}$', r'$\
               r'$\bar{e^c}$',r'$t_{e^c}$', r'$\bar{e^s}$',r'$t_{e^s}$',r'$C_\alpha^n$',r'$t_{f^c}$',r'$t_{f^r}$',\
               r'$t_{f^s}$',"avfc","avfr","avfs",r'$\alpha$',r'$p$']
 plot_percentiles([save05,save50,save95,saverand], [5,50,95,"rand"])
-plot_percentile(paras[4], labels[4])
-
+"""
 npz05 = np.load("npz, repl, neg e, p=05.npz")
 npz50 = np.load("npz, repl, neg e, p=50.npz")
 npz95 = np.load("npz, repl, neg e, p=95.npz")
@@ -65,5 +64,5 @@ np.savez("npz, save_all repl, neg ave.npz",
         delta_EF_prand = npzrand['rel_delta_EF'], paras_prand = npzrand['paras'],
         para_prand = npzrand['para'],
         delta_EF_p100 = npz100['rel_delta_EF'], paras_p100 = npz100['paras'],
-        para_p100 = npz100['para'])
+        para_p100 = npz100['para'])"""
 
