@@ -1,16 +1,19 @@
-# -*- coding: utf-8 -*-
 """
-Created on Fri Jan  6 09:03:21 2017
+@author: J.W. Spaak
+Contains all functions, that are needed to generate communities as well as
+compute the EF of those communities
 
-@author: Jurg
-Contains all functions that are needed to randomly generate a community
-and calculate its deltaEF
+Contains the same functions as community_construction_coex, but does so for
+the replacing community structure
+
+
 """
 
 import numpy as np
+
 from numpy.random import uniform as uni
 from scipy.integrate import quad
-import community_construction as test
+
 
 
 sqrt = np.sqrt(3) #is needed often in the program
@@ -18,10 +21,24 @@ n = 20
 
 def rand_par_repl(count=False,p = 'rand', ave_max = 0.5, e_max = 1,
                   ave_min = -0.5, e_min = -1):
-    """ returns randomized parameters for one ecosystem
+    """ returns randomized parameters for one community
+    
     av means average, t means stdv/average,
     t values are always between -1/sqrt(3), 1/sqrt(3)
-    to understand the equations consult supplement data 7"""
+    to understand the equations consult supplement data 7
+    
+    ave_max and ave_min are the maximum/minimum that are allowed for the
+    average sensitivity of each species type
+    e_max, e_min are the maximum/minimum that are allowed for the sensitivity
+    of each species (individually)   
+    
+    returns:
+        mu: Contains all growth rates and some associated values
+        f: contains the per capita contributions
+        e: contains the sensitivity
+        comp: Relative competition
+        p: Percent of species that are in ref and changed site (Type B species)
+        """
     
     # generate distribution of per capita contributions for species types
     t_fb, t_fu, t_fc = uni(-1/sqrt, 1/sqrt,3) # stdv/mean
@@ -44,7 +61,7 @@ def rand_par_repl(count=False,p = 'rand', ave_max = 0.5, e_max = 1,
     
     #randomly generate communities, until one fullfills coexistence conditions
     #attention, changing settings might turn this into an infinite loop
-    while not (counter and coex_test_repl2(mu, e,f,comp,alpha,p)):
+    while not (counter and coex_test_repl(mu, e,f,comp,alpha,p)):
     # chosen such that min(mu['avb'],mu['avu'])/(p*mu['avb']+q*mu['avu'])>comp
         mu = {'avb': uni(0,10)}
         mu['avu'] = uni(mu['avb']*comp*p/(1-q*comp),
@@ -96,11 +113,11 @@ def rand_par_repl(count=False,p = 'rand', ave_max = 0.5, e_max = 1,
             comp =  -alpha*n/(1-alpha*(n-1))
         counter+=1
 
-    return  mu, e,f,comp,alpha,p # exited while loop, community fullfills coexistence
+    return  mu, e,f,comp,alpha,p # community fullfills coexistence
      
   
 def coex_test_repl(mu, e,f,comp,alpha,p):
-    """tests if coexistence is given in changed site
+    """tests if coexistence is given in changed site; see supp. Info 11
     
     input should be the output of rand_par_repl
     
@@ -132,7 +149,7 @@ def coex_test_repl(mu, e,f,comp,alpha,p):
     else:
         return True
     
-def EF_(mu,f,alpha,p,s,cov,adjust=1):
+def EF_repl(mu,f,alpha,p,s,cov,adjust=1):
     """ computes the EF of the given system
     
     For computational background see Eq. 6"""
@@ -149,119 +166,47 @@ def rel_delta_EF_repl(mu, e,f,comp,alpha,p, adjust = 1):
     For computational background see Eq. 7
     
     adjust can be set to 0 to see the effect of the adjustmentterms"""
-    cov = {'b': mu['tb']*f['tb'], 'u': mu['tu']*f['tu']} #covariances of the relative distributions
+    #covariances of the relative distributions
+    cov = {'b': mu['tb']*f['tb'], 'u': mu['tu']*f['tu']} 
     cov['b_change'] = f['tb']*(mu['tb']*(1/e['avb']-1)-e['tb'])\
                         /(1/e['avb']-1-e['tb']*mu['tb'])
     cov['c_change'] = f['tc']*(mu['tc']*(1/e['avc']-1)-e['tc'])\
                         /(1/e['avc']-1-e['tc']*mu['tc'])
 
-    EF_r = EF_2(mu,f,alpha,p,['u',''],cov,adjust)
-    EF_s = EF_2(mu,f,alpha,p,['c','_change'],cov,adjust)
+    EF_r = EF_repl(mu,f,alpha,p,['u',''],cov,adjust)
+    EF_s = EF_repl(mu,f,alpha,p,['c','_change'],cov,adjust)
     return 100*(EF_s-EF_r)/EF_r #multiply by 100, result in percent
-
-def rand_par_coex(ave_max = 0.5, e_max = 1,
-                  ave_min = -0.5,e_min = -1):
-    """ returns randomized parameters for one community"""
     
-    ave = uni(ave_min,ave_max) # average sensitivity
-    alpha = uni(-0.95,-0.05) #interaction coefficient
-    parameters = [1,0,0,0,0,0,0] #values that do not coexist
-    # runs until community that coexists is found
-    # WARNING: changing settings might turn this into an infinite loop
-    while not (coex_test_coex(*parameters)):
-        """to understand why these parameters are chosen in this way, 
-        see appendix G in supplement data, folder results"""
-        t_f = uni(-1/sqrt, 1/sqrt) # stdv/mean of per capita contribution, in [-1/sqrt(3),1/sqrt(3)]
-        n = np.random.randint(5,21) # number of species
-        comp = -alpha*n/(1-alpha*(n-1)) #effective competition
-        t_mu = uni(comp-1,1-comp)/sqrt
-        minimum = min(np.abs([e_max/ave-1, 1-e_min/ave]))
-        #ensures, that sensitivity e_i  is in [e_min, e_max]
-        t_e = uni(-minimum/sqrt,minimum/sqrt)
-        parameters = ave,t_e,t_mu,t_f,comp,alpha,n
-
-    return ave,t_e,t_mu,t_f,comp,alpha,n  #alpha and n are just passed for convenience
-
-def coex_test_coex(ave,t_e,t_mu,t_f,comp,alpha,n):
-    """tests if coexistence is given in changed site
+def asymptotic_function_repl(mu, e,f,comp,alpha,p, max_ave_H=1):
+    """computes the EF with asymptotic f, f(N) = f_i*H_i*N_i/(N_i+H_i)
     
-    returns True, iff coexistence is guaranteed"""
-    #computes the growthrate of species in the changed site    
-    mu_str = lambda tmu, ave, te, u_i: \
-                    (1+u_i*tmu*sqrt)*(1/ave-(1+u_i*te*sqrt))
-    min1 = mu_str(t_mu, ave, t_e,1)/(1/ave-1-t_mu*t_e)
-    min2 = mu_str(t_mu, ave, t_e,-1)/(1/ave-1-t_mu*t_e)
-    return min(min1, min2)>comp
+    mu, e,f,comp,alpha,p should be the return values of rand_par_repl
+    max_ave_H is the maximum value for average value for  H.
+    H_i is uniformly distributed in [0,2*ave_H*mu['av']]"""
+    # choose distributions of H: H ~u[0,2*ave]
+    temp = uni(0,max_ave_H,3)
+    gam = {'avb':temp[0],'avu':temp[1],'avc':temp[2]}
+    temp = uni(-1/sqrt, 1/sqrt,3)
+    gam.update({'tb':temp[0],'tu':temp[1],'tc':temp[2]})
+    H = lambda x,t: gam['av'+t]*(1+gam['t'+t]*sqrt*x)\
+                    *mu['av'+t]*(1+mu['t'+t]*x*sqrt)
+    #asymptotic EF in N, f(N) = f_i*H_i*N_i/(N_i+H_i)
+    eco_fun = lambda x,t, N: f['av'+t]*(1+f['t'+t]*x*sqrt)*H(x,t)*N(x,t)\
+                                   /(N(x,t)+H(x,t))
     
-def rel_delta_EF_coex(ave,t_e,t_mu,t_f,comp,alpha,n):
-    """ computes \DetalEF/EF for one ecosystem
-    
-    for computational background see Eq. 4"""
-    save_1 = -(1+t_mu*t_e)*ave
-    save_2 = t_f*(t_mu+t_e)/(1+t_mu*t_e)-t_f*t_mu
-    save_3 = t_mu*t_f+1-comp
-    return 100*save_1*(1+save_2/save_3)
-    
-def fun_covs(para, delta_EF):
-    covs = {'11':[], '1-1':[], '-11':[], '-1-1':[]}
-    for i in range(len(delta_EF)):
-        a = str(int(np.sign(para[i][1]*para[i][2])))
-        b = str(int(np.sign(para[i][1]*para[i][3])))
-        covs[a+b].append(delta_EF[i])
-    covs2 = {}
-    covs2[r'cov$(e,\mu) = 1$, cov$(e,f)=1$'] = covs['11']
-    covs2[r'cov$(e,\mu) = -1$, cov$(e,f)=-1$'] = covs['-1-1']
-    covs2[r'cov$(e,\mu) = -1$, cov$(e,f)=1$'] = covs['-11']
-    covs2[r'cov$(e,\mu) = 1$, cov$(e,f)=-1$'] = covs['1-1']
-    return covs2
-    
-def asymptotic_function_coex(max_ave_gam=1, test = False):
-    if test:
-        ave_gam = 100
-        t_gam = 0
-    else:
-        ave_gam = uni(0,max_ave_gam)
-        t_gam = uni(-1/sqrt, 1/sqrt)
-    ave,t_e,t_mu,t_f,comp,alpha,n = rand_par_coex(ave_max = 0, e_max = 0)
-    int_fun = lambda x, N, H: n*(1+t_f*x*sqrt)*H(x)*N(x)/(N(x)+H(x))/2
-    N = lambda x: (1+t_mu*sqrt*x-comp)/(1+alpha)
-    H = lambda x: ave_gam*(1+t_gam*sqrt*x)*(1+t_mu*x*sqrt)
-    N_change = lambda x: ((1+x*t_mu*sqrt)*(1-ave*(1+t_e*sqrt*x))-\
-                comp*(1-ave*(1+t_mu*t_e)))/(1+alpha)
-    EF = quad(lambda x: int_fun(x,N,H),-1,1)[0]
-    EF_stress = quad(lambda x: int_fun(x,N_change,H),-1,1)[0]
-    paras = [ave,t_e,t_mu,t_f,comp,alpha,n,ave_gam, t_gam]
-    delta_EF_lin = rel_delta_EF_coex(*paras[:7])
-    
-    return 100*(EF_stress-EF)/EF,delta_EF_lin,paras
-
-def asymptotic_function_repl(mu, e,f,comp,alpha,p
-                              , max_ave_gam=1, test = False):
-    if test:
-        gam = {'avb':1000,'avu':1000,'avc':1000,\
-               'tb':0,'tu':0,'tc':0}
-    else:
-        temp = uni(0,max_ave_gam,3)
-        gam = {'avb':temp[0],'avu':temp[1],'avc':temp[2]}
-        temp = uni(-1/sqrt, 1/sqrt,3)
-        gam.update({'tb':temp[0],'tu':temp[1],'tc':temp[2]})
-
-    eco_fun = lambda x,t, N, H: f['av'+t]*(1+f['t'+t]*x*sqrt)*H(x,t)*N(x,t)\
-                                   /(N(x,t)+H(x,t))/2
-    N = lambda x,t,mu,avmu: (mu(x,t)-comp*avmu)/(1+alpha)
+    # growthrates in different sites
     mu_ref = lambda x,t: mu['av'+t]*(1+x*sqrt*mu['t'+t])
     mu_change = lambda x,t: mu['av'+t]*(1+x*sqrt*mu['t'+t])*\
                             (1-e['av'+t]*(1+e['t'+t]*sqrt*x))
+    # computes the equilibrium densities of species N, in changed and ref site
+    N = lambda x,t,mu,avmu: (mu(x,t)-comp*avmu)/(1+alpha)
     N_ref = lambda x,t: N(x,t,mu_ref,p*mu['avb']+(1-p)*mu['avu'])
     N_change = lambda x,t: N(x,t,mu_change,mu['av_change'])
-    avmu_change = p*mu['avb']*(1-e['avb']*(1+mu['tb']*e['tc']))+\
-                    (1-p)*mu['avc']*(1-e['avc']*(1+mu['tc']*e['tc']))
-    H = lambda x,t: gam['av'+t]*(1+gam['t'+t]*sqrt*x)\
-                    *mu['av'+t]*(1+mu['t'+t]*x*sqrt)
-    EF = n*(p*quad(lambda x: eco_fun(x,'b',N_ref,H),-1,1)[0]\
-            +(1-p)*quad(lambda x: eco_fun(x,'u',N_ref,H),-1,1)[0])
-    EF_change = n*(p*quad(lambda x: eco_fun(x,'b',N_change,H),-1,1)[0]\
-            +(1-p)*quad(lambda x: eco_fun(x,'c',N_change,H),-1,1)[0])
-    delta_EF_lin = rel_delta_EF_repl2(mu, e,f,comp,alpha,p)
     
-    return 100*(EF_change-EF)/EF,delta_EF_lin
+    # Integrate for the average, divide by 2 for normalisation
+    EF = n*(p*quad(lambda x: eco_fun(x,'b',N_ref)/2,-1,1)[0]\
+            +(1-p)*quad(lambda x: eco_fun(x,'u',N_ref)/2,-1,1)[0])
+    EF_change = n*(p*quad(lambda x: eco_fun(x,'b',N_change)/2,-1,1)[0]\
+            +(1-p)*quad(lambda x: eco_fun(x,'c',N_change)/2,-1,1)[0])
+    return 100*(EF_change-EF)/EF #multiply by 100 for percent
+
