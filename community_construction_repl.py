@@ -19,7 +19,7 @@ from scipy.integrate import quad
 sqrt = np.sqrt(3) #is needed often in the program
 n = 20
 
-def rand_par_repl(count=False,p = 'rand', ave_max = 0.5, e_max = 1,
+def rand_par(p = 'rand', ave_max = 0.5, e_max = 1,
                   ave_min = -0.5, e_min = -1):
     """ returns randomized parameters for one community
     
@@ -61,7 +61,7 @@ def rand_par_repl(count=False,p = 'rand', ave_max = 0.5, e_max = 1,
     
     #randomly generate communities, until one fullfills coexistence conditions
     #attention, changing settings might turn this into an infinite loop
-    while not (counter and coex_test_repl(mu, e,f,comp,alpha,p)):
+    while not (counter and coex_test(mu, e,f,comp,alpha,p)):
     # chosen such that min(mu['avb'],mu['avu'])/(p*mu['avb']+q*mu['avu'])>comp
         mu = {'avb': uni(0,10)}
         mu['avu'] = uni(mu['avb']*comp*p/(1-q*comp),
@@ -116,7 +116,7 @@ def rand_par_repl(count=False,p = 'rand', ave_max = 0.5, e_max = 1,
     return  mu, e,f,comp,alpha,p # community fullfills coexistence
      
   
-def coex_test_repl(mu, e,f,comp,alpha,p):
+def coex_test(mu, e,f,comp,alpha,p):
     """tests if coexistence is given in changed site; see supp. Info 11
     
     input should be the output of rand_par_repl
@@ -149,7 +149,7 @@ def coex_test_repl(mu, e,f,comp,alpha,p):
     else:
         return True
     
-def EF_repl(mu,f,alpha,p,s,cov,adjust=1):
+def EF(mu,f,alpha,p,s,cov,adjust=1):
     """ computes the EF of the given system
     
     For computational background see Eq. 6"""
@@ -160,7 +160,7 @@ def EF_repl(mu,f,alpha,p,s,cov,adjust=1):
     return p*EF1+q*EF2+adjust*p*q*n*comp/(1+alpha)*(f['avb']-f['av'+s[0]])\
                             *(mu['avb'+s[1]]-mu['av'+s[0]+s[1]])
     
-def rel_delta_EF_repl(mu, e,f,comp,alpha,p, adjust = 1):
+def delta_EF_lin(mu, e,f,comp,alpha,p, adjust = 1):
     """computes \DeltaEF/EF in the case of changing composition
     
     For computational background see Eq. 7
@@ -173,11 +173,11 @@ def rel_delta_EF_repl(mu, e,f,comp,alpha,p, adjust = 1):
     cov['c_change'] = f['tc']*(mu['tc']*(1/e['avc']-1)-e['tc'])\
                         /(1/e['avc']-1-e['tc']*mu['tc'])
 
-    EF_r = EF_repl(mu,f,alpha,p,['u',''],cov,adjust)
-    EF_s = EF_repl(mu,f,alpha,p,['c','_change'],cov,adjust)
+    EF_r = EF(mu,f,alpha,p,['u',''],cov,adjust)
+    EF_s = EF(mu,f,alpha,p,['c','_change'],cov,adjust)
     return 100*(EF_s-EF_r)/EF_r #multiply by 100, result in percent
     
-def asymptotic_function_repl(mu, e,f,comp,alpha,p, max_ave_H=1):
+def delta_EF_asym(mu, e,f,comp,alpha,p, max_ave_H=1):
     """computes the EF with asymptotic f, f(N) = f_i*H_i*N_i/(N_i+H_i)
     
     mu, e,f,comp,alpha,p should be the return values of rand_par_repl

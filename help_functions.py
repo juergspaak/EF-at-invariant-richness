@@ -20,7 +20,7 @@ def comp_EF(delta_EF, com_para,**kwargs):
     return EF_data
     
 def percentiles(datas,keys, y_min=None, y_max = None,labels = None,
-                     color = None,  fsize = 16,ticks = False):
+                     color = None,  fsize = 16,ticks = False, plot = None):
     """ plots the percentile curves for all data sets in data
     
     datas = [data1, data2...]: is a list with lists, each list will be plotted
@@ -36,9 +36,12 @@ def percentiles(datas,keys, y_min=None, y_max = None,labels = None,
     ordered_keys can be used to have different order in the legend (Default is dictionary order)"""
     datas_pos  = {key: datas["e>0,"+key] for key in keys}
     datas_neg  = {key: datas["e<0,"+key] for key in keys}
-    fig, ax = plt.subplots(figsize = (9,7))
+    if plot is None:
+        fig, ax = plt.subplots(figsize = (9,7))
+    else:
+        fig,ax = plot
     y_Min, y_Max = 0,0
-    acc = 1000
+    acc = 100
     if labels == None:
         labels = keys
     
@@ -70,12 +73,12 @@ def percentiles(datas,keys, y_min=None, y_max = None,labels = None,
 
     simArtist = plt.Line2D((0,1),(0,0), color='k', marker='v', linestyle='')
     anyArtist = plt.Line2D((0,2),(0,0), color='k',marker='^', linestyle='')
-    handles = [1,2,3,4,5]
-    display = range(5)
-    for i in range(5):
-        handles[i] = plt.Line2D((0,2),(0,0), color=color[i])
+    handles = []
+
+    for col in color:
+        handles.append( plt.Line2D((0,2),(0,0), color=col))
     ax.legend(loc = "upper left")
-    ax.legend([handle for i,handle in enumerate(handles) if i in display]+[simArtist,anyArtist],
+    ax.legend([handle for i,handle in enumerate(handles)]+[simArtist,anyArtist],
               labels+['e<0', 'e>0']
                ,loc = "upper left", numpoints = 1)
     return fig,ax
