@@ -44,16 +44,11 @@ except NameError:
             a = str(int(np.sign(para[i][1]*para[i][2])))
             b = str(int(np.sign(para[i][1]*para[i][3])))
             covs[a+b].append(delta_EF[i])
-        covs2 = {}
-        covs2['11'+adinfo] = covs['11']
-        covs2['-1-1'+adinfo] = covs['-1-1']
-        covs2['-11'+adinfo] = covs['-11']
-        covs2['1-1'+adinfo] = covs['1-1']
+        covs2 = {adinfo+key: covs[key] for key in covs.keys()}
         return covs2
     covs = fun_covs(coex['para'], coex['delta_EF_coex'], "e>0")
-    covs2 = fun_covs(npz_neg['para_p100'], npz_neg['delta_EF_p100'],"e<0")
-    covs.update(covs2)
-    marker = ['o','o','o','o','o','v','v','v','v','v']
+    covs.update(fun_covs(npz_neg['para_p100'], npz_neg['delta_EF_p100'],"e<0"))
+    marker = ['^','^','^','^','^','v','v','v','v','v']
 
 def avmue_dov_avmu2():
     key_ord = ['coex', 'paras_p95', 'paras_p50', 'paras_prand', 'paras_p05']
@@ -76,7 +71,7 @@ def deltl_plot():
     fig,ax = plot_percentiles(deltl, y_label = yl, grid = False, 
                      y_max = 100,marker =marker,color = color,
                      ordered_keys = ord_keys)
-    simArtist = plt.Line2D((0,1),(0,0), color='k', marker='o', linestyle='')
+    simArtist = plt.Line2D((0,1),(0,0), color='k', marker='^', linestyle='')
     anyArtist = plt.Line2D((0,2),(0,0), color='k',marker='v', linestyle='')
     handles, labels = ax.get_legend_handles_labels()
     display = range(5)
@@ -89,35 +84,35 @@ def deltl_plot():
                ,loc = "upper left", numpoints = 1)
     fig.savefig("Figure, percentiles delta_EF, different p,2.pdf", dpi=fig.dpi)
     
-def covs_plot(structure = "pointsymmetry"):
+def covs_plot(structure = "reversed"):
     colors = 2*['purple', 'red', 'green', 'darkblue']
     k= sorted(covs.keys())
     if structure == "pointsymmetry":
-        ord_key = [k[2], k[6],k[4],k[0],k[7],k[3],k[1],k[5]]
+        ord_key = [k[1], k[3],k[2],k[0],k[7],k[5],k[4],k[6]]
         labels = [r'cov$(|e|,\mu) = 1$, cov$(e,f)=1$',
               r'cov$(|e|,\mu) = -1$, cov$(e,f)=1$',
             r'cov$(|e|,\mu) = -1$, cov$(e,f)=-1$',
             r'cov$(|e|,\mu) = 1$, cov$(e,f)=-1$']
     elif structure == "reversed":
-        ord_key = [k[2], k[6],k[4],k[0],k[5],k[1],k[3],k[7]]
+        ord_key = [k[1], k[3],k[2],k[0],k[6],k[4],k[5],k[7]]
         labels = [r'cov$(|e|,\mu) = 1$, cov$(|e|,f)=-1$',
               r'cov$(|e|,\mu) = -1$, cov$(|e|,f)=-1$',
             r'cov$(|e|,\mu) = -1$, cov$(|e|,f)=1$',
             r'cov$(|e|,\mu) = 1$, cov$(|e|,f)=1$']
     else:
-        ord_key = [k[2], k[6],k[4],k[0],k[3],k[7],k[5],k[1]]
+        ord_key = [k[1], k[3],k[2],k[0],k[5],k[7],k[6],k[4]]
         labels = [r'cov$(e,\mu) = -1$, cov$(e,f)=1$',
               r'cov$(e,\mu) = 1$, cov$(e,f)=1$',
             r'cov$(e,\mu) = 1$, cov$(e,f)=-1$',
             r'cov$(e,\mu) = -1$, cov$(e,f)=-1$']
         structure = "normal"
     
-    marker = ['o','o','o','o','v','v','v','v']
+    marker = ['^','^','^','^','v','v','v','v']
     colors = 2*['purple', 'red', 'green', 'darkblue']
     fig,ax = plot_percentiles(covs, ordered_keys = ord_key, y_label = yl,
                 y_max = 100, grid = False, 
                 save = "covariances2",marker =marker, color = colors)
-    simArtist = plt.Line2D((0,1),(0,0), color='k', marker='o', linestyle='')
+    simArtist = plt.Line2D((0,1),(0,0), color='k', marker='^', linestyle='')
     anyArtist = plt.Line2D((0,2),(0,0), color='k',marker='v', linestyle='')
     handles, tlabels = ax.get_legend_handles_labels()
     display = range(4)
@@ -130,7 +125,7 @@ def covs_plot(structure = "pointsymmetry"):
         ,loc = "upper left", numpoints = 1)
     fig.savefig("Figure, percentiles covs, "+structure +".pdf", dpi=fig.dpi)
     
-
+covs_plot("reversed")
 
 n = 20
 """ for the adjustment terms:"""

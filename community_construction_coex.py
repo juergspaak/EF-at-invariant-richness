@@ -3,11 +3,11 @@
 Contains all functions, that are needed to generate communities as well as
 compute the EF of those communities
 
-rand_par_coex randomly generates a community and checks whether this community
-is able to coexist in the ref and the changed site(does so via coex_test_coex)
+rand_par randomly generates a community and checks whether this community
+is able to coexist in the ref and the changed site(does so via coex_test)
 
-rel_delta_EF_coex computes \DeltaEF/EF with linear contribution to function
-asymptotic_function_coex with asymptotic function
+delta_EF_lin computes \DeltaEF/EF with linear contribution to function
+delta_EF_asym with asymptotic function
 """
 
 import numpy as np
@@ -15,7 +15,9 @@ import numpy as np
 from numpy.random import uniform as uni
 from scipy.integrate import quad
 
-def rand_par_coex(ave_max = 0.5, e_max = 1,
+sqrt = np.sqrt(3)
+
+def rand_par(ave_max = 0.5, e_max = 1,
                   ave_min = -0.5,e_min = -1):
     """returns randomized parameters for one community
     
@@ -33,7 +35,7 @@ def rand_par_coex(ave_max = 0.5, e_max = 1,
     parameters = [1,0,0,0,0,0,0] #values that do not coexist
     # runs until community that coexists is found
     # WARNING: changing settings might turn this into an infinite loop
-    while not (coex_test_coex(*parameters)):
+    while not (coex_test(*parameters)):
         """to understand why these parameters are chosen in this way, 
         see appendix G in supplement data, folder results"""
         t_f = uni(-1/sqrt, 1/sqrt) # stdv/mean of per capita contribution
@@ -46,7 +48,7 @@ def rand_par_coex(ave_max = 0.5, e_max = 1,
         parameters = ave,t_e,t_mu,t_f,comp,alpha,n
     return ave,t_e,t_mu,t_f,comp,alpha,n
 
-def coex_test_coex(ave,t_e,t_mu,t_f,comp,alpha,n):
+def coex_test(ave,t_e,t_mu,t_f,comp,alpha,n):
     """tests if coexistence is given in changed site
     
     returns True, iff coexistence is guaranteed, see supplemental Info 11"""
@@ -58,7 +60,7 @@ def coex_test_coex(ave,t_e,t_mu,t_f,comp,alpha,n):
     min2 = mu_str(t_mu, ave, t_e,-1)/(1/ave-1-t_mu*t_e)
     return min(min1, min2)>comp
     
-def rel_delta_EF_coex(ave,t_e,t_mu,t_f,comp,alpha,n):
+def delta_EF_lin(ave,t_e,t_mu,t_f,comp,alpha,n):
     """ computes DetalEF/EF for one community
     
     for computational background see Eq. 4"""
@@ -67,7 +69,7 @@ def rel_delta_EF_coex(ave,t_e,t_mu,t_f,comp,alpha,n):
     save_3 = t_mu*t_f+1-comp
     return 100*save_1*(1+save_2/save_3)
     
-def asymptotic_function_coex(ave,t_e,t_mu,t_f,comp,alpha,n,max_ave_H=1):
+def delta_EF_asym(ave,t_e,t_mu,t_f,comp,alpha,n,max_ave_H=1):
     """computes the EF with asymptotic f, f(N) = f_i*H_i*N_i/(N_i+H_i)
     
     ave,t_e,t_mu,t_f,comp,alpha,n should be the return values of rand_par_coex
