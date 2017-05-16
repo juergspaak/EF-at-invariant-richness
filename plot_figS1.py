@@ -7,8 +7,10 @@ Created on Wed Dec 14 08:06:03 2016
 import numpy as np
 import matplotlib.pyplot as plt
 
+#compute competition
 comp=lambda n,alpha: -alpha*n/(1-alpha*(n-1))
 
+#sample alphas
 alphas=np.linspace(-1,0,1000)
 fig=plt.figure()
 for n in [2,5,10,15,20,100]:
@@ -20,4 +22,6 @@ fig.gca().set_xlabel(r'$\alpha$',fontsize=14)
 fig.gca().set_ylabel(r'$C^n_{\alpha}$',fontsize=14)
 
 plt.show(fig)
-fig.savefig("competition.pdf")
+
+#save figure
+fig.savefig("Figure S1, competition.pdf")

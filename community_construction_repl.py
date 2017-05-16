@@ -10,15 +10,16 @@ the replacing community structure
 """
 
 import numpy as np
+import pickle
 
 from numpy.random import uniform as uni
 from scipy.integrate import quad
 
-
+#load the communities
+para = pickle.load(open("repl, com_para.p", "rb"))
 
 sqrt = np.sqrt(3) #is needed often in the program
 n = 20
-
 def rand_par(p = 'rand', ave_max = 0.5, e_max = 1,
                   ave_min = -0.5, e_min = -1):
     """ returns randomized parameters for one community
@@ -159,6 +160,7 @@ def EF(mu,f,alpha,p,s,cov,adjust=1):
     EF2 = n*f['av'+s[0]]*mu['av'+s[0]+s[1]]/(1+alpha)*(cov[s[0]+s[1]]+1-comp)
     return p*EF1+q*EF2+adjust*p*q*n*comp/(1+alpha)*(f['avb']-f['av'+s[0]])\
                             *(mu['avb'+s[1]]-mu['av'+s[0]+s[1]])
+
     
 def delta_EF_lin(mu, e,f,comp,alpha,p, adjust = 1):
     """computes \DeltaEF/EF in the case of changing composition

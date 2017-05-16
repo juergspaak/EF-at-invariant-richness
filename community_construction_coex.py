@@ -11,11 +11,14 @@ delta_EF_asym with asymptotic function
 """
 
 import numpy as np
+import pickle
 
 from numpy.random import uniform as uni
 from scipy.integrate import quad
 
 sqrt = np.sqrt(3)
+#load the communities
+para = pickle.load(open("coex, com_para.p", "rb"))
 
 def rand_par(ave_max = 0.5, e_max = 1,
                   ave_min = -0.5,e_min = -1):
