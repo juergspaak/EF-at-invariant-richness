@@ -62,17 +62,22 @@ def rand_par(p = 'rand', ave_max = 0.5, e_max = 1,
     #randomly generate communities, until one fullfills coexistence conditions
     #attention, changing settings might turn this into an infinite loop
     while not (counter and coex_test(mu, e,f,comp,alpha,p)):
-    # chosen such that min(mu['avb'],mu['avu'])/(p*mu['avb']+q*mu['avu'])>comp
+        if counter >10000: # avoids infinite loops, happens about 1/150
+            counter = 1 
+            e['avb'] = uni(ave_min,ave_max) # redefine new sensitivity
+            alpha = uni(-0.95,-0.05) # interaction coecfficient
+            comp =  -alpha*n/(1-alpha*(n-1))
+            
+        # chosen such that min(mu['avb'],mu['avu'])/(p*mu['avb']+q*mu['avu'])>comp
         mu = {'avb': uni(0,10)}
         mu['avu'] = uni(mu['avb']*comp*p/(1-q*comp),
                              min(mu['avb']*(1-p*comp)/(q*comp),10))
         
-        
+        #coexistence limit
         tresh1 = comp*(p*mu['avb']+q*mu['avu'])
         # chosen such that min (mu_u,mu_b) > tresh1, i.e. coexist
         mu['tb'] = uni(-(1-tresh1/mu['avb'])/sqrt,(1-tresh1/mu['avb'])/sqrt)
         mu['tu'] = uni(-(1-tresh1/mu['avu'])/sqrt,(1-tresh1/mu['avu'])/sqrt)
-        
         
         # mu['avc']*(1-ave_min) must be able to coexist in changed site
         tresh2 = mu['avb']*(1-e['avb'])*p*comp/(1-comp*q)/(1-ave_min)
@@ -82,7 +87,7 @@ def rand_par(p = 'rand', ave_max = 0.5, e_max = 1,
         # ensure, that min(mu_c) fullfills above conditions
         dist = min(tresh1/mu['avc']-1, 1-tresh2/mu['avc'])/sqrt
         mu['tc'] = uni(-dist,dist)
-        
+
         # choose min, s.t. mu['avc']*(1-e['avc']) fullfills coexistence conditions
         tresh1 = max(1-mu['avb']/mu['avc']*(1-e['avb'])*(1-comp*p)\
                      /(q*comp),ave_min)
@@ -106,13 +111,8 @@ def rand_par(p = 'rand', ave_max = 0.5, e_max = 1,
         # reference types are assumed to have e_i = 1, always         
         # e['avu'] = 1 #change if desired differently
         # e['tu'] = 0
-        if counter >10000: # avoids infinite loops, happens about 1/150
-            counter = 0 
-            e['avb'] = uni(0,0.5) # redefine new sensitivity
-            alpha = uni(-0.95,-0.05) # interaction coecfficient
-            comp =  -alpha*n/(1-alpha*(n-1))
-        counter+=1
-
+        
+        counter+=1 #count iterations to reset settings, avoids infinite loops
     return  mu, e,f,comp,alpha,p # community fullfills coexistence
      
   
@@ -127,13 +127,13 @@ def coex_test(mu, e,f,comp,alpha,p):
     By changing the above parameters this might become necessary"""
 
     #computes the growthrate of one species
-    mu_str = lambda x,t: mu['av'+t]*(1+x*mu['t'+t]*sqrt)\
+    mu_change = lambda x,t: mu['av'+t]*(1+x*mu['t'+t]*sqrt)\
                 *e['av'+t]*(1/e['av'+t]-(1+x*e['t'+t]*sqrt))/mu['av_change']
 
     # minimal growthrate of all species in changed site, extremum is on boundary
     minimal = 1
     for x,t in [[1,'b'],[-1,'b'],[1,'c'],[-1,'c']]:
-        minimal = min(mu_str(x,t),minimal)
+        minimal = min(mu_change(x,t),minimal)
                 
     """The following checks whether u species are extinct
     maximal = max(mu_str(1,'u'),mu_str(-1,'u')) #maxima on the boundaries
@@ -173,9 +173,10 @@ def delta_EF_lin(mu, e,f,comp,alpha,p, adjust = 1):
     cov['c_change'] = f['tc']*(mu['tc']*(1/e['avc']-1)-e['tc'])\
                         /(1/e['avc']-1-e['tc']*mu['tc'])
 
-    EF_r = EF(mu,f,alpha,p,['u',''],cov,adjust)
-    EF_s = EF(mu,f,alpha,p,['c','_change'],cov,adjust)
-    return 100*(EF_s-EF_r)/EF_r #multiply by 100, result in percent
+    EF_u = EF(mu,f,alpha,p,['u',''],cov,adjust)
+
+    EF_c = EF(mu,f,alpha,p,['c','_change'],cov,adjust)
+    return 100*(EF_c-EF_u)/EF_u #multiply by 100, result in percent
     
 def delta_EF_asym(mu, e,f,comp,alpha,p, max_ave_H=1):
     """computes the EF with asymptotic f, f(N) = f_i*H_i*N_i/(N_i+H_i)
@@ -204,9 +205,9 @@ def delta_EF_asym(mu, e,f,comp,alpha,p, max_ave_H=1):
     N_change = lambda x,t: N(x,t,mu_change,mu['av_change'])
     
     # Integrate for the average, divide by 2 for normalisation
-    EF = n*(p*quad(lambda x: eco_fun(x,'b',N_ref)/2,-1,1)[0]\
+    EF_ref = n*(p*quad(lambda x: eco_fun(x,'b',N_ref)/2,-1,1)[0]\
             +(1-p)*quad(lambda x: eco_fun(x,'u',N_ref)/2,-1,1)[0])
     EF_change = n*(p*quad(lambda x: eco_fun(x,'b',N_change)/2,-1,1)[0]\
             +(1-p)*quad(lambda x: eco_fun(x,'c',N_change)/2,-1,1)[0])
-    return 100*(EF_change-EF)/EF #multiply by 100 for percent
+    return 100*(EF_change-EF)/EF_ref #multiply by 100 for percent
 

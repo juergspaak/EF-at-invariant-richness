@@ -53,11 +53,11 @@ def coex_test(ave,t_e,t_mu,t_f,comp,alpha,n):
     
     returns True, iff coexistence is guaranteed, see supplemental Info 11"""
     #computes the growthrate of species in the changed site    
-    mu_str = lambda tmu, ave, te, u_i: \
+    mu_change = lambda tmu, ave, te, u_i: \
                     (1+u_i*tmu*sqrt)*(1/ave-(1+u_i*te*sqrt))
     #miminum always occurs on boundaries
-    min1 = mu_str(t_mu, ave, t_e,1)/(1/ave-1-t_mu*t_e)
-    min2 = mu_str(t_mu, ave, t_e,-1)/(1/ave-1-t_mu*t_e)
+    min1 = mu_change(t_mu, ave, t_e,1)/(1/ave-1-t_mu*t_e)
+    min2 = mu_change(t_mu, ave, t_e,-1)/(1/ave-1-t_mu*t_e)
     return min(min1, min2)>comp
     
 def delta_EF_lin(ave,t_e,t_mu,t_f,comp,alpha,n):
@@ -88,5 +88,5 @@ def delta_EF_asym(ave,t_e,t_mu,t_f,comp,alpha,n,max_ave_H=1):
     
     # Integrate for the average, divide by 2 for normalisation
     EF_ref = quad(lambda x: eco_fun(x,N_ref)/2,-1,1)[0] 
-    EF_stress = quad(lambda x: eco_fun(x,N_change)/2,-1,1)[0]
-    return 100*(EF_stress-EF_ref)/EF_ref #multiply by 100 for percent
+    EF_change = quad(lambda x: eco_fun(x,N_change)/2,-1,1)[0]
+    return 100*(EF_change-EF_ref)/EF_ref #multiply by 100 for percent
