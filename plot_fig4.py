@@ -26,6 +26,7 @@ ax1.set_xlabel(r'$N/N^*$', fontsize=16)
 # y-axis: total fun contributed by this species (not per capita contribution)
 ax1.set_ylabel(r'$f(N)$', fontsize=16)
 ax1.legend(loc = "upper left", fontsize = 16)
+ax1.set_title("A. Examples of asymptotic functions", fontsize = 16)
 
 keys = ['100','2', '1','0.5','0.1']
 # contains all EF datas
@@ -51,7 +52,9 @@ ticks = [-60,-40,-20,0,20,40,60,80,100]
 labels = [r'max$(\overline{H})=100$',r'max$(\overline{H})=2$',
           r'max$(\overline{H})=1$',r'max$(\overline{H})=0.5$',
           r'max$(\overline{H})=0.1$',"Ref. Linear functioning"]
-fig,ax = hef.percentiles(EF_data, keys, y_max = 100, ticks = ticks,
+fig,ax2 = hef.percentiles(EF_data, keys, y_max = 100, ticks = ticks,
        labels = labels,color = color, plot = (fig,ax2))
+ax2.set_title('B. EF with asymptotic functioning', fontsize = 16)
+
 #save figure
 fig.savefig("Figure 4, Asymptotic functioning.pdf")
