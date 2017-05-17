@@ -150,7 +150,7 @@ def coex_test(mu, e,f,comp,alpha,p):
     else:
         return True
     
-def EF(mu,f,alpha,p,s,cov,adjust=1):
+def EF_fun(mu,f,alpha,p,s,cov,adjust=1):
     """ computes the EF of the given system
     
     For computational background see Eq. 6"""
@@ -175,9 +175,9 @@ def delta_EF_lin(mu, e,f,comp,alpha,p, adjust = 1):
     cov['c_change'] = f['tc']*(mu['tc']*(1/e['avc']-1)-e['tc'])\
                         /(1/e['avc']-1-e['tc']*mu['tc'])
 
-    EF_u = EF(mu,f,alpha,p,['u',''],cov,adjust)
+    EF_u = EF_fun(mu,f,alpha,p,['u',''],cov,adjust)
 
-    EF_c = EF(mu,f,alpha,p,['c','_change'],cov,adjust)
+    EF_c = EF_fun(mu,f,alpha,p,['c','_change'],cov,adjust)
     return 100*(EF_c-EF_u)/EF_u #multiply by 100, result in percent
     
 def delta_EF_asym(mu, e,f,comp,alpha,p, max_ave_H=1):
@@ -211,5 +211,5 @@ def delta_EF_asym(mu, e,f,comp,alpha,p, max_ave_H=1):
             +(1-p)*quad(lambda x: eco_fun(x,'u',N_ref)/2,-1,1)[0])
     EF_change = n*(p*quad(lambda x: eco_fun(x,'b',N_change)/2,-1,1)[0]\
             +(1-p)*quad(lambda x: eco_fun(x,'c',N_change)/2,-1,1)[0])
-    return 100*(EF_change-EF)/EF_ref #multiply by 100 for percent
+    return 100*(EF_change-EF_ref)/EF_ref #multiply by 100 for percent
 
