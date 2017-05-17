@@ -1,38 +1,35 @@
-The files community_construction_coex, community_construction_repl contain
-all the functions needed to generate communities and calculate their DeltaEF/EF.
+This repository contains all the code used for the simulations in the paper ***
 
-To understand the calculations being done please have a look at:
-community_construction_coex: Supplemental Infomation, Section 6 and equation 4 from the paper
-community_construction_repl: Supplemental Infomation, Section 7 and equations 6,7 from the paper
+To understand the code within the program it is strongly suggested to
+read the paper as well as the Supplementary Info.
 
-Examples:
-The examples are given for the community_construction_coex functions, but exactly the same would also work
-for the _repl case.
+The files are:
+community_construction_coex.py:
+Contains all functions for the invariant community structure case
+community_construction_repl.py:
+Contains all functions for the invariant community structure case
+The files community_construction* contain the same function names,
+the functions with the same name do the same, one with invariant com. structure
+and the other with changing community structure.
 
-################################################
-#generate communities
-com_para = {}
-# a gerneral community, facing any sort of environmental change
-com_para['general'] = rand_par_coex() #a general community
-#a community facing nutrient enrichment, i.e. e<0
-com_para['enrich'] = rand_par_coex(ave_max=0, e_max =0)
-#a community facing toxic stress, i.e. e>0
-com_para['tox'] = rand_par_coex(ave_min=0, e_min =0)
-# a community facing temperature changes, most species will suffer, but some might provit
-com_para['temp'] = rand_par_coex(ave_min=-0.2, e_min =-0.3)
+parameters of communities.py:
+Generates communities, this programm was used to generate the files
+"coex, com_para.p" and "repl, com_para.p"
 
-#compute deltaEF/EF, linear functioning
-delta_EF = {key:rel_delta_EF_coex(*com_para[key]) \
-		for key in com_para.keys()}
+coex, com_para.p:
+Pickle file that contains 2*100'000 communities. Once with positive 
+environmental change and once with negative. Communities with invariant com. str.
+repl, com_para.p:
+Pickle file that contains 4*2*100'000 communities. Four with positive 
+environmental change and four with negative. Community structure changes,
+2 for each of the cases: p=0.95, p=0.50, p is random, p = 0.05
 
-#compute deltaEF/EF, asymptotic functioning
-asym_deltaEF = {key:asymptotic_function_coex(*com_para[key]) \
-		for key in com_para.keys()}
+help_functions.py:
+Contains helpfunctions, mainly the plot command used by most plot_fig*  files
 
-#compute deltaEF/EF, asymptotic functioning, with low halfsaturating constant
-asym_deltaEF_lowH = {key:asymptotic_function_coex(*com_para[key], max_ave_H = 0.2) \
-		for key in com_para.keys()}
-################################################
-Note comparing these 3 dictionaries makes not that much sense, because the result is mainly
-driven by a random process. Comparing these dictionaries makes only sense with a much larger
-set of communities
+plot_fig*:
+Generates the figure(s) indicated. Correspond to the "Figure *,pdf" files
+
+Examples.txt:
+Contains a list of simple examples. Complicated examples can be found in the
+plot_fig* files
