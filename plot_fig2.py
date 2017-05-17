@@ -9,10 +9,11 @@ import community_construction_coex as coex
 
 #split into different covariances
 EF_covs = {'e<0,11':[], 'e<0,1-1':[], 'e<0,-11':[], 'e<0,-1-1':[],
-           'e>0,11':[], 'e>0,1-1':[], 'e>0,-11':[], 'e>0,-1-1':[],}
+           'e>0,11':[], 'e>0,1-1':[], 'e>0,-11':[], 'e>0,-1-1':[]}
+abs_sign = {'e>0,':1, 'e<0,':-1} #sign change for |e|
 for key in ['e>0,', 'e<0,']:
     for para in coex.para[key[:3]]:
-            a = str(int(np.sign(-para[1]*para[2]))) #-para[1] beacuse of |e|
+            a = str(int(np.sign(abs_sign[key]*para[1]*para[2])))
             b = str(int(np.sign(para[1]*para[3])))
             EF_covs[key+a+b].append(coex.delta_EF_lin(*para))
 

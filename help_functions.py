@@ -4,8 +4,6 @@ This program contains fucntions for plotting and computing several communities
 """
 import matplotlib.pyplot as plt
 import numpy as np
-import community_construction_coex as coex
-
 
 def com_con(rand_par, num_com, **kwargs):
     """community constructor, returns a list with different communities

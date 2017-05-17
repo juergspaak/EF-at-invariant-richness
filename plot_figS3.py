@@ -26,7 +26,7 @@ for k in keys:
         hef.comp_EF(repl.delta_EF_lin,repl.para["e>0,"+k], adjust =0)
 
 #plotting
-fig, ax =  plt.subplots(2,2,figsize =(15,15), sharex = True, sharey = True)
+fig, ax =  plt.subplots(2,2,figsize =(12,12), sharex = True, sharey = True)
 fig.subplots_adjust(hspace=0.1,wspace = 0.1)
 ls = [':', '--']
 ticks = [-80,-60,-40,-20,0,20,40,60,80,100]
