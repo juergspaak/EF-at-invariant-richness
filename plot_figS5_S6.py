@@ -31,7 +31,7 @@ keys = ['coex','0.95', '0.50', 'rand', '0.05']
 labels = ["p = 1.00,", "p = 0.95", "p = 0.50", "p is random", "p = 0.05"]
 color = ['blue','green','red', 'cyan', 'purple']
 #plot S4
-S4,ax = hef.percentiles(eff_ave, keys, color, labels = labels)
+S5,ax = hef.percentiles(eff_ave, keys, color, labels = labels)
 
 key = 'rand'
 adapted_para = {}
@@ -41,10 +41,13 @@ for change in ['e<0,', 'e>0,']:
     #linearly approximate the change in \mu
     slope, intercept, a,b,c = \
         linregress(np.linspace(0,100, itera),sorted(eff_ave[change+key]))
-    ave_max = 100*slope+intercept
-    ave_min = intercept
+    ave_max = 100*slope+intercept # maximum for average
+    ave_min = intercept #minimum for average
+    dist = min(ave_min -(-1), 1-ave_max) #distance to boundaray [-1,1]
+    e_min, e_max = ave_min-dist, ave_max+dist #to have symmetric conditions
     adapted_para[change] = hef.com_con(coex.rand_par, itera,
-                           ave_min = ave_min, ave_max = ave_max)
+                           ave_min = ave_min, ave_max = ave_max,
+                           e_min = e_min, e_max = e_max)
 
 # in growth rates of new comunities
 eff_ave.update({'e>0,ad': [par[0] for par in adapted_para['e>0,']],
@@ -59,7 +62,7 @@ EF_data.update({key+',coex': hef.comp_EF(coex.delta_EF_lin, coex.para[key])
             for key in coex.para.keys()})
 
 #plotting
-S5, (ax1,ax2) = plt.subplots(1,2,figsize =(18,7))
+S6, (ax1,ax2) = plt.subplots(1,2,figsize =(18,7))
 ref_col = color[keys.index(key)] #to have matching colors
 color = [ref_col, 'orange', 'blue']
 labels = ['Changing community', r'Adapted e', r'Normal e']
@@ -75,7 +78,7 @@ ax1.set_ylabel(r"$(\overline{\mu}-\overline{\mu'})/\overline{\mu}$",
 ax1.set_title('A. Change in growthrates', fontsize = 16)
 ax2.set_title('B. Ecosystem functioning', fontsize = 16)
 #save figure
-S4.savefig("Figure S5, Adapted e.pdf")
-S5.savefig("Figure S6, Adapted e.pdf")
+S5.savefig("Figure S5, Adapted e.pdf")
+S6.savefig("Figure S6, Adapted e.pdf")
 
     
