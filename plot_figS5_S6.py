@@ -1,6 +1,6 @@
 """
 @author: J.W. Spaak
-This files plots Fig. S4,S5
+This files plots Fig. S5,S6
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -75,7 +75,7 @@ ax1.set_ylabel(r"$(\overline{\mu}-\overline{\mu'})/\overline{\mu}$",
 ax1.set_title('A. Change in growthrates', fontsize = 16)
 ax2.set_title('B. Ecosystem functioning', fontsize = 16)
 #save figure
-S4.savefig("Figure S4, Adapted e.pdf")
-S5.savefig("Figure S5, Adapted e.pdf")
+S4.savefig("Figure S5, Adapted e.pdf")
+S5.savefig("Figure S6, Adapted e.pdf")
 
     

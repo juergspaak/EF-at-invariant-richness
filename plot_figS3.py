@@ -1,52 +1,48 @@
 """
 @author: J.W. Spaak
-This program was used to make Fig.S3
+This files plots Fig. S3
 """
 import matplotlib.pyplot as plt
+import numpy as np
 
-import community_construction_repl as repl
 import help_functions as hef
+import community_construction_coex as coex
 
-
-keys = ['0.95', '0.50', 'rand', '0.05']
-
-#compute DeltaEF/EF for the different communities
-EF_data = {}
-for k in keys:
-    #compute with adjustment terms
-    EF_data["e<0,"+k] = \
-        hef.comp_EF(repl.delta_EF_lin,repl.para["e<0,"+k])
-    EF_data["e>0,"+k] = \
-        hef.comp_EF(repl.delta_EF_lin,repl.para["e>0,"+k])
-
-    #compute with no adjustment terms
-    EF_data["e<0,no adjust"+k] = \
-        hef.comp_EF(repl.delta_EF_lin,repl.para["e<0,"+k], adjust = 0)
-    EF_data["e>0,no adjust"+k] = \
-        hef.comp_EF(repl.delta_EF_lin,repl.para["e>0,"+k], adjust =0)
+sqrt = np.sqrt(3)
+#get the parameters
+t_values = {'e>0,t_e': [par[1] for par in coex.para['e>0']],
+        'e<0,t_e': [par[1] for par in coex.para['e<0']],
+        'e>0,t_mu': [par[2] for par in coex.para['e>0']],
+        'e<0,t_mu': [par[2] for par in coex.para['e<0']],
+        'uniform': np.linspace(-1/sqrt, 1/sqrt,len(coex.para['e>0']))}
+n = {'e>0,': [par[-1] for par in coex.para['e>0']],
+     'e<0,': [par[-1] for par in coex.para['e<0']],
+     'uniform': sorted(np.random.randint(5,21,len(coex.para['e>0'])))}
 
 #plotting
-fig, ax =  plt.subplots(2,2,figsize =(12,12), sharex = True, sharey = True)
-fig.subplots_adjust(hspace=0.1,wspace = 0.1)
-ls = [':', '--']
-ticks = [-80,-60,-40,-20,0,20,40,60,80,100]
-color = ['green','red', 'cyan', 'purple']
-panel = ['A. ', 'C. ', 'C. ', 'D. ']
-for i,key in list(enumerate(keys)):
-    pl_keys = ['no adjust'+key, key]
-    col_pl = 2*[color[i]]
-    ax_pl = ax[i%2,i//2]
-    labels = ["no adjustment terms", "with adjustment terms"]
-    hef.percentiles(EF_data, pl_keys,y_min = -80, y_max = 100, 
-        ticks = ticks,color = col_pl, ls = ls, labels = labels, 
-        plot = [fig, ax_pl])
-    ax_pl.set_title(panel[i]+'p = ' +key, fontsize = 16)
-    
-ax[1][1].set_ylabel(' ')
-ax[1][0].set_xlabel('percentile', fontsize = 16)
-ax[0][0].set_ylabel(r'$100\cdot\Delta EF/EF$', fontsize = 16)
-ax[1][0].set_ylabel(r'$100\cdot\Delta EF/EF$', fontsize = 16)
-ax[0,1].set_title('B. p is random', fontsize = 16)
+fig, (ax1,ax2) = plt.subplots(2,1,figsize =(9,10))
+hef.percentiles(t_values, ['t_e', 't_mu'],["red","green"], 
+                         plot = (fig,ax1))
+ax1.plot(np.linspace(0,100,len(coex.para['e>0'])),t_values['uniform'])
+
+simArtist = plt.Line2D((0,1),(0,0), color='k', marker='v', linestyle='')
+anyArtist = plt.Line2D((0,2),(0,0), color='k',marker='^', linestyle='')
+handles = []
+for col in ['red','green','blue','magenta']:
+    handles.append( plt.Line2D((0,2),(0,0), color=col))
+ax1.legend(loc = "upper left")
+ax1.legend(handles[:3]+[simArtist,anyArtist],
+           ['t_e', 't_mu', 'uniform','e<0', 'e>0']
+           ,loc = "upper left", numpoints = 1)
+hef.percentiles(n, [''],['magenta'], 
+                         plot = (fig,ax2))
+ax2.plot(np.linspace(0,100,len(coex.para['e>0'])),n['uniform'], )
+ax2.set_ylim(ymin = 4, ymax = 21)
+ax2.legend(handles[-2:]+[simArtist,anyArtist],
+           ['uniform', 'n','e<0', 'e>0']
+          ,loc = "upper left", numpoints = 1)
+ax1.set_ylabel(r'$t$', fontsize=16)
+ax2.set_ylabel(r'$n$', fontsize=16)
 
 #save figure
-fig.savefig("Figure S3, Adjustment terms.pdf")
+fig.savefig("Figure S3, Distributions.pdf")
