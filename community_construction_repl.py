@@ -16,17 +16,23 @@ from numpy.random import uniform as uni
 from scipy.integrate import quad
 
 #load the communities
-try:
+"""try:
     para = pickle.load(open("repl, com_para.p", "rb"))
 except FileNotFoundError: #other functions should be still be available
     def error():
         raise FileNotFoundError("No such file or directory: 'repl, com_para.p'"
             "\nPlease run the file 'parameters of communities.py "+
             "to create this file. Read the readme for further instructions.")
+"""        
+def vec_uni(low, high):
+    try:
+        return low+(high-low)*uni(size = len(low))
+    except TypeError:
+        return uni(low, high)
 
 sqrt = np.sqrt(3) #is needed often in the program
 n = 20
-def rand_par(p = 'rand', ave_max = 0.5, e_max = 1,
+def rand_par(num = 1000, p = 'rand', ave_max = 0.5, e_max = 1,
                   ave_min = -0.5, e_min = -1):
     """ returns randomized parameters for one community
     
@@ -48,8 +54,8 @@ def rand_par(p = 'rand', ave_max = 0.5, e_max = 1,
         """
     
     # generate distribution of per capita contributions for species types
-    t_fb, t_fu, t_fc = uni(-1/sqrt, 1/sqrt,3) # stdv/mean
-    avfb, avfu, avfc = uni(0.5,1.5,3) #averages of f
+    t_fb, t_fu, t_fc = uni(-1/sqrt, 1/sqrt,[3,num]) # stdv/mean
+    avfb, avfu, avfc = uni(0.5,1.5,[3,num]) #averages of f
     f = {'avb':avfb,'avu':avfu,'avc':avfc,\
          'tb':t_fb,'tu':t_fu,'tc':t_fc}
     
@@ -57,57 +63,74 @@ def rand_par(p = 'rand', ave_max = 0.5, e_max = 1,
     counter = 0
     # fixed parameters, will only be changed if "no" community can be found
     # having these parameters
-    e = {'avb':uni(ave_min,ave_max)} # average effect on C species
-    alpha = uni(-0.95,-0.05) # interaction coecfficient
-    comp = -alpha*n/(1-alpha*(n-1)) #effective competition , computed
-    
+    e_fix = {'avb':uni(ave_min,ave_max,num),
+            'avc': np.zeros(num),
+            'tc': np.zeros(num),
+            'tb': np.zeros(num)} # average effect on C species
+    e = {'avb': e_fix['avb']}
+    mu_fix = {'avb':np.zeros(num),
+            'avc': np.zeros(num),
+            'tc': np.zeros(num),
+            'avu': np.zeros(num),
+            'tu': np.zeros(num),
+            'tb': np.zeros(num)} # average effect on C species
+    alpha_fix = uni(-0.95,-0.05,num) # interaction coecfficient
+    alpha = alpha_fix
+    comp_fix = -alpha_fix*n/(1-alpha_fix*(n-1)) #effective competition , computed
+    comp = comp_fix
+    not_fix = np.array(num*[True])
     # percent of species with type C
     if p is 'rand':
-        p = int(np.random.randint(1,n-1))/n
+        p_fix = np.random.randint(1,n-1,num)/n
+    else:
+        p_fix = p*np.ones(num)
+    p = p_fix
     q = 1-p
     
     #randomly generate communities, until one fullfills coexistence conditions
     #attention, changing settings might turn this into an infinite loop
-    while not (counter and coex_test(mu, e,f,comp,alpha,p)):
+    while num>0:
         if counter >10000: # avoids infinite loops, happens about 1/150
             counter = 1 
-            e['avb'] = uni(ave_min,ave_max) # redefine new sensitivity
-            alpha = uni(-0.95,-0.05) # interaction coecfficient
-            comp =  -alpha*n/(1-alpha*(n-1))
+            e['avb'] = uni(ave_min,ave_max,num) # redefine new sensitivity
+            alpha_fix[not_fix] = uni(-0.95,-0.05,num) # interaction coecfficient
+            comp_fix[not_fix] =  -alpha_fix[not_fix]*n/(1-alpha_fix[not_fix]*(n-1))
+            alpha = alpha_fix[not_fix]
+            comp = comp_fix[not_fix]
             
         # chosen such that min(mu['avb'],mu['avu'])/(p*mu['avb']+q*mu['avu'])>comp
-        mu = {'avb': uni(0,10)}
-        mu['avu'] = uni(mu['avb']*comp*p/(1-q*comp),
-                             min(mu['avb']*(1-p*comp)/(q*comp),10))
+        mu = {'avb': uni(0,10,num)}
+        mu['avu'] = vec_uni(mu['avb']*comp*p/(1-q*comp),
+            np.amin([mu['avb']*(1-p*comp)/(q*comp),10*np.ones(num)], axis = 0))
         
         #coexistence limit
         tresh1 = comp*(p*mu['avb']+q*mu['avu'])
         # chosen such that min (mu_u,mu_b) > tresh1, i.e. coexist
-        mu['tb'] = uni(-(1-tresh1/mu['avb'])/sqrt,(1-tresh1/mu['avb'])/sqrt)
-        mu['tu'] = uni(-(1-tresh1/mu['avu'])/sqrt,(1-tresh1/mu['avu'])/sqrt)
+        mu['tb'] =vec_uni(-(1-tresh1/mu['avb'])/sqrt,(1-tresh1/mu['avb'])/sqrt)
+        mu['tu'] =vec_uni(-(1-tresh1/mu['avu'])/sqrt,(1-tresh1/mu['avu'])/sqrt)
         
         # mu['avc']*(1-ave_min) must be able to coexist in changed site
         tresh2 = mu['avb']*(1-e['avb'])*p*comp/(1-comp*q)/(1-ave_min)
         # we always have treshhold2<treshhold1
-        mu['avc'] = uni(tresh2,tresh1)
+        mu['avc'] = vec_uni(tresh2,tresh1)
         
         # ensure, that min(mu_c) fullfills above conditions
-        dist = min(tresh1/mu['avc']-1, 1-tresh2/mu['avc'])/sqrt
-        mu['tc'] = uni(-dist,dist)
+        dist = np.amin([tresh1/mu['avc']-1, 1-tresh2/mu['avc']],axis = 0)/sqrt
+        mu['tc'] = vec_uni(-dist,dist)
 
         # choose min, s.t. mu['avc']*(1-e['avc']) fullfills coexistence conditions
-        tresh1 = max(1-mu['avb']/mu['avc']*(1-e['avb'])*(1-comp*p)\
-                     /(q*comp),ave_min)
+        tresh1 = np.amax([1-mu['avb']/mu['avc']*(1-e['avb'])*(1-comp*p)\
+                     /(q*comp),ave_min*np.ones(num)],axis = 0)
         # choose max, s.t. mu['avc']*(1-e['avc']) fullfills coexistence conditions
-        tresh2 = min(1-mu['avb']/mu['avc']*(1-e['avb'])/(1-comp*q)\
-                     *(p*comp),ave_max)
-        e['avc'] = uni(tresh1, tresh2)
+        tresh2 = np.amin([1-mu['avb']/mu['avc']*(1-e['avb'])/(1-comp*q)\
+                     *(p*comp),ave_max*np.ones(num)],axis = 0)
+        e['avc'] = vec_uni(tresh1, tresh2)
         
         # choose borders, that e_i are within [e_min, e_max]
-        minimum = min(np.abs([e_max/e['avc']-1, 1-e_min/e['avb']]))
+        minimum = np.amin(np.abs([e_max/e['avc']-1, 1-e_min/e['avb']]),axis =0)
         e['tb'] = uni(-minimum/sqrt,minimum/sqrt)
-        minimum = min(np.abs([e_max/e['avc']-1, 1-e_min/e['avc']]))
-        e['tc'] = uni(-minimum/sqrt,minimum/sqrt)
+        minimum = np.amin(np.abs([e_max/e['avc']-1, 1-e_min/e['avc']]),axis =0)
+        e['tc'] = vec_uni(-minimum/sqrt,minimum/sqrt)
         
         # average growthsrates in changed site of the species types
         mu['avb_change'] = mu['avb']*e['avb']*(1/e['avb']-1 - mu['tb']*e['tb'])
@@ -118,12 +141,27 @@ def rand_par(p = 'rand', ave_max = 0.5, e_max = 1,
         # reference types are assumed to have e_i = 1, always         
         # e['avu'] = 1 #change if desired differently
         # e['tu'] = 0
-        
+        for k in e_fix.keys():
+            e_fix[k][not_fix] = e[k]
+        for k in mu_fix.keys():
+            mu_fix[k][not_fix] = mu[k]
+        coex = coex_test(mu,e,comp)
+        not_fix[not_fix] = np.logical_not(coex)
+        alpha = alpha_fix[not_fix]
+        comp = comp_fix[not_fix]
+        p = p_fix[not_fix]
+        q = 1-p
+        e = {'avb': e_fix['avb'][not_fix]}
+        num = len(p)
         counter+=1 #count iterations to reset settings, avoids infinite loops
-    return  mu, e,f,comp,alpha,p # community fullfills coexistence
+    mu_fix['avb_change'] = mu_fix['avb']*e_fix['avb']*(1/e_fix['avb']-1 - mu_fix['tb']*e_fix['tb'])
+    mu_fix['avc_change'] = mu_fix['avc']*e_fix['avc']*(1/e_fix['avc']-1 - mu_fix['tc']*e_fix['tc'])
+        # average growthrate of entire community
+    mu_fix['av_change'] = p_fix*mu_fix['avb_change']+(1-p_fix)*mu_fix['avc_change']
+    return  mu_fix, e_fix,f,comp_fix,alpha_fix,p_fix # community fullfills coexistence
      
-  
-def coex_test(mu, e,f,comp,alpha,p):
+
+def coex_test(mu, e,comp):
     """tests if coexistence is given in changed site; see supp. Info 11
     
     input should be the output of rand_par_repl
@@ -138,9 +176,9 @@ def coex_test(mu, e,f,comp,alpha,p):
                 *e['av'+t]*(1/e['av'+t]-(1+x*e['t'+t]*sqrt))/mu['av_change']
 
     # minimal growthrate of all species in changed site, extremum is on boundary
-    minimal = 1
+    minimal = np.ones(len(comp))
     for x,t in [[1,'b'],[-1,'b'],[1,'c'],[-1,'c']]:
-        minimal = min(mu_change(x,t),minimal)
+        minimal = np.amin([mu_change(x,t),minimal], axis = 0)
                 
     """The following checks whether u species are extinct
     maximal = max(mu_str(1,'u'),mu_str(-1,'u')) #maxima on the boundaries
@@ -150,12 +188,10 @@ def coex_test(mu, e,f,comp,alpha,p):
         maximal = max(maximal, mu_str(loc,'u')
     if maximal/mu['av_change']>comp
         return False"""
-
-    if minimal<comp:
-        return False
-    else:
-        return True
-    
+    return minimal>comp
+start = timer()
+a = rand_par(100000, ave_max = 0, e_max =0)  
+print(timer()-start)
 def EF_fun(mu,f,alpha,p,s,cov,adjust=1):
     """ computes the EF of the given system
     

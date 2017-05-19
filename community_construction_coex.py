@@ -70,14 +70,14 @@ def rand_par(num = 1000, ave_max = 0.5, e_max = 1,
         #ensures, that sensitivity e_i  is in [e_min, e_max]
         t_e = vec_uni(-minimum/sqrt,minimum/sqrt)
         
-        coex = coex_test(ave[not_fix],t_e,t_mu,comp)
+        
         
         
         t_e_fix[not_fix] = t_e
         t_mu_fix[not_fix] = t_mu
         n_fix[not_fix] = n
-        fix[not_fix] = coex
-        not_fix = np.logical_not(fix)
+        coex = coex_test(ave[not_fix],t_e,t_mu,comp)
+        not_fix[not_fix] = np.logical_not(coex)
         num = len(t_e_fix[not_fix])
     return ave,t_e_fix,t_mu_fix,\
             t_f,-alpha*n_fix/(1-alpha*(n_fix-1)),alpha,n_fix
