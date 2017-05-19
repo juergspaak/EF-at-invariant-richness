@@ -19,7 +19,7 @@ keys = ['100','2', '1','0.5','0.1']
 
 fig, (ax1,ax2) = plt.subplots(1,2,figsize =(18,7))
 # asymptotic functions used
-H = lambda N, aveH: aveH*N/(aveH+N)
+H = lambda N, aveH: aveH/(aveH+N)
 # plot these different functions
 color = ["red", "green", "blue", "black", "magenta","orange"]
 H_functions = {key: H(np.linspace(0,1,1000),float(key)) for key in keys[:5]}
@@ -30,8 +30,8 @@ for (i,key) in enumerate(keys):
 # x-axis: densitiy of species relative to equilibrium density
 ax1.set_xlabel(r'$N/N^*$', fontsize=16)
 # y-axis: total fun contributed by this species (not per capita contribution)
-ax1.set_ylabel(r'$f(N)$', fontsize=16)
-ax1.legend(loc = "upper left", fontsize = 16)
+ax1.set_ylabel(r'$f$', fontsize=16)
+ax1.legend(loc = "lower left", fontsize = 13)
 ax1.set_title("A. Examples of asymptotic functions", fontsize = 16)
 
 keys = ['100','2', '1','0.5','0.1']

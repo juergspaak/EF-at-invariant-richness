@@ -42,6 +42,8 @@ labels = ["p = 1.00,", "p = 0.95", "p = 0.50", "p is random", "p = 0.05"]
 color = ['blue','green','red', 'cyan', 'purple']
 #plot S4
 S5,ax = hef.percentiles(eff_ave, keys, color, labels = labels)
+ax.set_ylabel(r"$(\overline{\mu}-\overline{\mu'})/\overline{\mu}$",
+               fontsize = 16)
 
 key = 'rand'
 adapted_para = {}
@@ -87,6 +89,7 @@ ax1.set_ylabel(r"$(\overline{\mu}-\overline{\mu'})/\overline{\mu}$",
                fontsize = 16)
 ax1.set_title('A. Change in growthrates', fontsize = 16)
 ax2.set_title('B. Ecosystem functioning', fontsize = 16)
+ax2.set_ylabel(r'$100\cdot\Delta EF/EF$', fontsize = 16)
 #save figure
 S5.savefig("Figure S5, Adapted e.pdf")
 S6.savefig("Figure S6, Adapted e.pdf")
