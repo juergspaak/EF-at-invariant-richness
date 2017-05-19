@@ -7,6 +7,13 @@ import numpy as np
 import help_functions as hef
 import community_construction_coex as coex
 
+
+#ensure that loading worked
+try:
+    coex.para
+except AttributeError:
+    coex.error()
+    
 #split into different covariances
 EF_covs = {'e<0,11':[], 'e<0,1-1':[], 'e<0,-11':[], 'e<0,-1-1':[],
            'e>0,11':[], 'e>0,1-1':[], 'e>0,-11':[], 'e>0,-1-1':[]}

@@ -11,6 +11,16 @@ import help_functions as hef
 import community_construction_coex as coex
 import community_construction_repl as repl
 
+#ensure that loading worked
+try:
+    coex.para
+except AttributeError:
+    coex.error()
+try:
+    repl.para
+except AttributeError:
+    repl.error() 
+
 sqrt = np.sqrt(3)
 # computes the relative change in average growthrate (mu-mu')/mu
 eff_ave = {'e>0,coex': [par[0] for par in coex.para['e>0']],

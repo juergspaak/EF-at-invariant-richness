@@ -18,7 +18,13 @@ from scipy.integrate import quad
 
 sqrt = np.sqrt(3)
 #load the communities
-para = pickle.load(open("coex, com_para.p", "rb"))
+try:
+    para = pickle.load(open("coex, com_para.p", "rb"))
+except FileNotFoundError: #other functions should be still be available
+    def error():
+        raise FileNotFoundError("No such file or directory: 'coex, com_para.p'"
+            "\nPlease run the file 'parameters of communities.py "+
+            "to create this file. Read the readme for further instructions.")
 
 def rand_par(ave_max = 0.5, e_max = 1,
                   ave_min = -0.5,e_min = -1):

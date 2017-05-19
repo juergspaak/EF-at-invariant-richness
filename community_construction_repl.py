@@ -16,7 +16,13 @@ from numpy.random import uniform as uni
 from scipy.integrate import quad
 
 #load the communities
-para = pickle.load(open("repl, com_para.p", "rb"))
+try:
+    para = pickle.load(open("repl, com_para.p", "rb"))
+except FileNotFoundError: #other functions should be still be available
+    def error():
+        raise FileNotFoundError("No such file or directory: 'repl, com_para.p'"
+            "\nPlease run the file 'parameters of communities.py "+
+            "to create this file. Read the readme for further instructions.")
 
 sqrt = np.sqrt(3) #is needed often in the program
 n = 20

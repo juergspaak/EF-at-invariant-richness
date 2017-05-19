@@ -7,6 +7,11 @@ import matplotlib.pyplot as plt
 import community_construction_repl as repl
 import help_functions as hef
 
+#ensure that loading worked
+try:
+    repl.para
+except AttributeError:
+    repl.error() 
 
 keys = ['0.95', '0.50', 'rand', '0.05']
 

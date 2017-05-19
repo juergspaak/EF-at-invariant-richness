@@ -8,6 +8,12 @@ import numpy as np
 import help_functions as hef
 import community_construction_coex as coex
 
+#ensure that loading worked
+try:
+    coex.para
+except AttributeError:
+    coex.error()
+
 sqrt = np.sqrt(3)
 #get the parameters
 t_values = {'e>0,t_e': [par[1] for par in coex.para['e>0']],

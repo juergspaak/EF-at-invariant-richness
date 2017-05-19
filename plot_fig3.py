@@ -6,6 +6,16 @@ import help_functions as hef
 import community_construction_repl as repl
 import community_construction_coex as coex
 
+#ensure that loading worked
+try:
+    coex.para
+except AttributeError:
+    coex.error()
+try:
+    repl.para
+except AttributeError:
+    repl.error()    
+
 keys = ['0.95', '0.50', 'rand', '0.05']
 #compute DeltaEF/EF for the different communities
 EF_data = {}

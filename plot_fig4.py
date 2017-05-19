@@ -8,6 +8,12 @@ import matplotlib.pyplot as plt
 import help_functions as hef
 import community_construction_coex as coex
 
+#ensure that loading worked
+try:
+    coex.para
+except AttributeError:
+    coex.error()
+
 #different values for H that are used:
 keys = ['100','2', '1','0.5','0.1']
 
