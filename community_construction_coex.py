@@ -25,8 +25,14 @@ except FileNotFoundError: #other functions should be still be available
         raise FileNotFoundError("No such file or directory: 'coex, com_para.p'"
             "\nPlease run the file 'parameters of communities.py "+
             "to create this file. Read the readme for further instructions.")
+        
+def vec_uni(low, high):
+    try:
+        return low+(high-low)*uni(size = len(low))
+    except TypeError:
+        return uni(low, high)
 
-def rand_par(ave_max = 0.5, e_max = 1,
+def rand_par(num = 1000, ave_max = 0.5, e_max = 1,
                   ave_min = -0.5,e_min = -1):
     """returns randomized parameters for one community
     
@@ -39,35 +45,53 @@ def rand_par(ave_max = 0.5, e_max = 1,
     t values are always between -1/sqrt(3), 1/sqrt(3)
     to understand the equations consult supplement data 6"""
     
-    ave = uni(ave_min,ave_max) # average sensitivity
-    alpha = uni(-0.95,-0.05) #interaction coefficient
-    parameters = [1,0,0,0,0,0,0] #values that do not coexist
+    ave = uni(ave_min,ave_max, num) # average sensitivity
+    alpha = uni(-0.95,-0.05, num) #interaction coefficient
+    
+    # does not affect coexistence
+    t_f = uni(-1/sqrt, 1/sqrt,num) # stdv/mean of per capita contribution
+
+    fix = np.array(num*[False])
+    not_fix = np.logical_not(fix)
+    t_e_fix = 100000*np.ones(num)
+    t_mu_fix = 100000*np.ones(num)
+    n_fix = 100000*np.ones(num)
     # runs until community that coexists is found
     # WARNING: changing settings might turn this into an infinite loop
-    while not (coex_test(*parameters)):
+    while num>0:
         """to understand why these parameters are chosen in this way, 
         see appendix G in supplement data, folder results"""
-        t_f = uni(-1/sqrt, 1/sqrt) # stdv/mean of per capita contribution
-        n = np.random.randint(5,21) # number of species
-        comp = -alpha*n/(1-alpha*(n-1)) #effective competition
-        t_mu = uni(comp-1,1-comp)/sqrt
-        minimum = min(np.abs([e_max/ave-1, 1-e_min/ave]))
+        
+        n = np.random.randint(5,21,num) # number of species
+        
+        comp = -alpha[not_fix]*n/(1-alpha[not_fix]*(n-1)) #effective competition
+        t_mu = vec_uni(comp-1,1-comp)/sqrt
+        minimum = np.amin(np.abs([e_max/ave[not_fix]-1, 1-e_min/ave[not_fix]]), axis = 0)
         #ensures, that sensitivity e_i  is in [e_min, e_max]
-        t_e = uni(-minimum/sqrt,minimum/sqrt)
-        parameters = ave,t_e,t_mu,t_f,comp,alpha,n
-    return ave,t_e,t_mu,t_f,comp,alpha,n
+        t_e = vec_uni(-minimum/sqrt,minimum/sqrt)
+        
+        coex = coex_test(ave[not_fix],t_e,t_mu,comp)
+        
+        
+        t_e_fix[not_fix] = t_e
+        t_mu_fix[not_fix] = t_mu
+        n_fix[not_fix] = n
+        fix[not_fix] = coex
+        not_fix = np.logical_not(fix)
+        num = len(t_e_fix[not_fix])
+    return ave,t_e_fix,t_mu_fix,\
+            t_f,-alpha*n_fix/(1-alpha*(n_fix-1)),alpha,n_fix
 
-def coex_test(ave,t_e,t_mu,t_f,comp,alpha,n):
+def coex_test(ave,t_e,t_mu,comp):
     """tests if coexistence is given in changed site
     
     returns True, iff coexistence is guaranteed, see supplemental Info 11"""
-    #computes the growthrate of species in the changed site    
-    mu_change = lambda tmu, ave, te, u_i: \
-                    (1+u_i*tmu*sqrt)*(1/ave-(1+u_i*te*sqrt))
+    #computes the growthrate of species in the changed site
+    mu_change = lambda u_i: (1+u_i*t_mu*sqrt)*(1/ave-(1+u_i*t_e*sqrt))
     #miminum always occurs on boundaries
-    min1 = mu_change(t_mu, ave, t_e,1)/(1/ave-1-t_mu*t_e)
-    min2 = mu_change(t_mu, ave, t_e,-1)/(1/ave-1-t_mu*t_e)
-    return min(min1, min2)>comp
+    min1 = mu_change(1)/(1/ave-1-t_mu*t_e)
+    min2 = mu_change(-1)/(1/ave-1-t_mu*t_e)
+    return np.amin([min1, min2], axis = 0)>comp
     
 def delta_EF_lin(ave,t_e,t_mu,t_f,comp,alpha,n):
     """ computes DetalEF/EF for one community
