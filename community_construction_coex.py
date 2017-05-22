@@ -27,56 +27,81 @@ except FileNotFoundError: #other functions should be still be available
             "to create this file. Read the readme for further instructions.")
         
 def vec_uni(low, high):
-    try:
-        return low+(high-low)*uni(size = len(low))
-    except TypeError:
-        return uni(low, high)
+    """returns a random variable between low and high, uniform distribution
+    
+    low and high must be array-like with same shape.
+    low is the lower bound of the uniform distribution, hight is the upperbound
+    
+    returns: An array of same shape as low and high. Each entry in this array
+    is a randomvariable uniformly distributed in low, high.
+    
+    Examples:
+    low = np.array([0,0,2])
+    high = np.array([1,2,4])
+    result = vec_uni(low, high)
+    # result[0] is uniformly distributed in [0,1]
+    # result[1] is uniformly distributed in [0,2]
+    # result[2] is uniformly distributed in [2,4]"""
+    high = np.array(high)
+    low = np.array(low)
+    return low+(high-low)*uni(size = low.shape)  #linear transformation
 
 def rand_par(num = 1000, ave_max = 0.5, e_max = 1,
                   ave_min = -0.5,e_min = -1):
     """returns randomized parameters for one community
     
-    ave_max and ave_min are the maximum/minimum that are allowed for the
+    num : number of species to be generated
+    ave_max and ave_min: maximum/minimum that are allowed for the
     average sensitivity of each species type
-    e_max, e_min are the maximum/minimum that are allowed for the sensitivity
+    e_max, e_min: maximum/minimum that are allowed for the sensitivity
     of each species (individually)    
     
     av means average, t means stdv/average,
-    t values are always between -1/sqrt(3), 1/sqrt(3)
-    to understand the equations consult supplement data 6"""
+    to understand the equations consult supplement data 6
     
+    returns:
+        ave: Average sensitivity for the communitie
+        t_e: stdv/mean of sensitivity
+        t_mu: stdv/mean of growthrates
+        t_f: stdv/mean of per capita contribution to funciton
+        comp: effective competition
+        alpha: interaction coeficient
+        n: number of species"""
+    
+    #these values are fixed from the beginning, do not change while running
     ave = uni(ave_min,ave_max, num) # average sensitivity
     alpha = uni(-0.95,-0.05, num) #interaction coefficient
     
     # does not affect coexistence
     t_f = uni(-1/sqrt, 1/sqrt,num) # stdv/mean of per capita contribution
-
-    fix = np.array(num*[False])
-    not_fix = np.logical_not(fix)
-    t_e_fix = 100000*np.ones(num)
-    t_mu_fix = 100000*np.ones(num)
-    n_fix = 100000*np.ones(num)
-    # runs until community that coexists is found
+    
+    # not_fix = False means values will not change in future runs
+    not_fix = np.array(num*[True]) 
+    #store values for return, these values will change
+    t_e_fix = np.ones(num) #sdv/men of environmental change effect
+    t_mu_fix = np.ones(num) #sdv/mean of growthrate
+    n_fix = np.ones(num) #number of species
+    # runs until all communities coexist
     # WARNING: changing settings might turn this into an infinite loop
-    while num>0:
+    while num>0: #num is the number of communities that haven't been fiexed yet
         """to understand why these parameters are chosen in this way, 
         see appendix G in supplement data, folder results"""
-        
         n = np.random.randint(5,21,num) # number of species
-        
         comp = -alpha[not_fix]*n/(1-alpha[not_fix]*(n-1)) #effective competition
-        t_mu = vec_uni(comp-1,1-comp)/sqrt
-        minimum = np.amin(np.abs([e_max/ave[not_fix]-1, 1-e_min/ave[not_fix]]), axis = 0)
+        t_mu = vec_uni(comp-1,1-comp)/sqrt #min(mu)/mean(mu)>comp
+        
         #ensures, that sensitivity e_i  is in [e_min, e_max]
+        minimum = np.amin(np.abs([e_max/ave[not_fix]-1,
+                                  1-e_min/ave[not_fix]]), axis = 0)
         t_e = vec_uni(-minimum/sqrt,minimum/sqrt)
         
-        
-        
-        
+        #save ALL new computed values in not fixed communities
         t_e_fix[not_fix] = t_e
         t_mu_fix[not_fix] = t_mu
         n_fix[not_fix] = n
+        #test communities coexistence requirements
         coex = coex_test(ave[not_fix],t_e,t_mu,comp)
+        # fix communities that fullfill coexistence requirements
         not_fix[not_fix] = np.logical_not(coex)
         num = len(t_e_fix[not_fix])
     return ave,t_e_fix,t_mu_fix,\
@@ -89,9 +114,10 @@ def coex_test(ave,t_e,t_mu,comp):
     #computes the growthrate of species in the changed site
     mu_change = lambda u_i: (1+u_i*t_mu*sqrt)*(1/ave-(1+u_i*t_e*sqrt))
     #miminum always occurs on boundaries
-    min1 = mu_change(1)/(1/ave-1-t_mu*t_e)
-    min2 = mu_change(-1)/(1/ave-1-t_mu*t_e)
-    return np.amin([min1, min2], axis = 0)>comp
+    min1 = mu_change(1)
+    min2 = mu_change(-1)
+    # min(mu(1-e))/mean(mu(1-e))>comp
+    return np.amin([min1, min2], axis = 0)/(1/ave-1-t_mu*t_e)>comp
     
 def delta_EF_lin(ave,t_e,t_mu,t_f,comp,alpha,n):
     """ computes DetalEF/EF for one community
