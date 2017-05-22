@@ -5,25 +5,13 @@ compute the EF of those communities
 
 Contains the same functions as community_construction_coex, but does so for
 the replacing community structure
-
-
 """
-
 import numpy as np
 import pickle
 
 from numpy.random import uniform as uni
-from scipy.integrate import quad
-
-#load the communities
-"""try:
-    para = pickle.load(open("repl, com_para.p", "rb"))
-except FileNotFoundError: #other functions should be still be available
-    def error():
-        raise FileNotFoundError("No such file or directory: 'repl, com_para.p'"
-            "\nPlease run the file 'parameters of communities.py "+
-            "to create this file. Read the readme for further instructions.")
-"""        
+from scipy.integrate import simps
+      
 def vec_uni(low, high):
     """returns a random variable between low and high, uniform distribution
     
@@ -99,14 +87,9 @@ def rand_par(num_com = 1000, p = 'rand', ave_max = 0.5, e_max = 1,
         p_fix = np.random.randint(1,n-1,num)/n
     else:
         p_fix = p*np.ones(num)
-    counter = 0
-    time_save = np.zeros(int(1e5))
-    num_save = np.zeros(int(1e5))
     #randomly generate communities, until num_com many fullfill coex. req.
     #attention, changing settings might turn this into an infinite loop
-    
     while num>num_com*ad_com:
-        start = timer()
         #copy the predefined values into arrays to be used
         e = {'avb': e_fix['avb'][not_fix]}
         p = p_fix[not_fix]
@@ -168,9 +151,6 @@ def rand_par(num_com = 1000, p = 'rand', ave_max = 0.5, e_max = 1,
         coex = coex_test(mu,e,comp)
         not_fix[not_fix] = np.logical_not(coex)
         num = np.count_nonzero(not_fix) #number of not fixed communities
-        num_save[counter] = num
-        time_save[counter] = timer()-start
-        counter+=1
         
     fix = np.logical_not(not_fix) #communities that are fixed, i.e. coex
     # choose only num_com coexisting communities
@@ -195,7 +175,7 @@ def rand_par(num_com = 1000, p = 'rand', ave_max = 0.5, e_max = 1,
     f = {'avb':avfb,'avu':avfu,'avc':avfc,\
          'tb':t_fb,'tu':t_fu,'tc':t_fc}
 
-    return  [mu_ret, e_ret,f,comp_ret,alpha_ret,p_ret],time_save[:counter], num_save[:counter] # community fullfills coexistence
+    return mu_ret, e_ret,f,comp_ret,alpha_ret,p_ret# community fullfills coexistence
      
 
 def coex_test(mu, e,comp):
@@ -263,6 +243,7 @@ def delta_EF_asym(mu, e,f,comp,alpha,p, max_ave_H=1):
     mu, e,f,comp,alpha,p should be the return values of rand_par_repl
     max_ave_H is the maximum value for average value for  H.
     H_i is uniformly distributed in [0,2*ave_H*mu['av']]"""
+    num = len(alpha)
     # choose distributions of H: H ~u[0,2*ave]
     temp = uni(0,max_ave_H,3)
     gam = {'avb':temp[0],'avu':temp[1],'avc':temp[2]}
@@ -283,18 +264,21 @@ def delta_EF_asym(mu, e,f,comp,alpha,p, max_ave_H=1):
     N_ref = lambda x,t: N(x,t,mu_ref,p*mu['avb']+(1-p)*mu['avu'])
     N_change = lambda x,t: N(x,t,mu_change,mu['av_change'])
     
-    # Integrate for the average, divide by 2 for normalisation
-    EF_ref = n*(p*quad(lambda x: eco_fun(x,'b',N_ref)/2,-1,1)[0]\
-            +(1-p)*quad(lambda x: eco_fun(x,'u',N_ref)/2,-1,1)[0])
-    EF_change = n*(p*quad(lambda x: eco_fun(x,'b',N_change)/2,-1,1)[0]\
-            +(1-p)*quad(lambda x: eco_fun(x,'c',N_change)/2,-1,1)[0])
+    # integrate over all species for EF
+    x_simp = np.array(num*[np.linspace(-1,1,51)]) #x_axes
+    y_ref = {'b': eco_fun(x_simp.T, 'b',N_ref).T,
+             'u': eco_fun(x_simp.T, 'u',N_ref).T}#y_values in ref
+    y_cha = {'b': eco_fun(x_simp.T, 'b',N_change).T,
+             'c': eco_fun(x_simp.T, 'c',N_change).T}#y_values in change
+    
+    EF_ref = n*(p*simps(y_ref['b'],x_simp)+(1-p)*simps(y_ref['u'],x_simp))
+    EF_change = n*(p*simps(y_cha['b'],x_simp)+(1-p)*simps(y_cha['c'],x_simp))
     return 100*(EF_change-EF_ref)/EF_ref #multiply by 100 for percent
-
-start = timer()   
-a,time, num = rand_par(1000000, ave_min = 0, e_min = 0, ad_com = 0.005)
-mid = timer()
-b = delta_EF_lin(*a)
-end = timer()
-plot_percentiles([save,b])
-print(timer()-end,end-mid, mid-start)
-plt.plot(num, time,',')
+    
+#load the communities
+try:
+    para = pickle.load(open("repl1, com_para.p", "rb"))
+except FileNotFoundError: #file not computed yet, will be computed
+    import parameters_construction
+    para = parameters_construction.para_return(rand_par)
+          

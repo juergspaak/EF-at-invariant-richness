@@ -9,22 +9,12 @@ is able to coexist in the ref and the changed site(does so via coex_test)
 delta_EF_lin computes \DeltaEF/EF with linear contribution to function
 delta_EF_asym with asymptotic function
 """
-
 import numpy as np
-import pickle
 
 from numpy.random import uniform as uni
-from scipy.integrate import quad
+from scipy.integrate import simps
 
 sqrt = np.sqrt(3)
-#load the communities
-try:
-    para = pickle.load(open("coex, com_para.p", "rb"))
-except FileNotFoundError: #other functions should be still be available
-    def error():
-        raise FileNotFoundError("No such file or directory: 'coex, com_para.p'"
-            "\nPlease run the file 'parameters of communities.py "+
-            "to create this file. Read the readme for further instructions.")
         
 def vec_uni(low, high):
     """returns a random variable between low and high, uniform distribution
@@ -134,18 +124,24 @@ def delta_EF_asym(ave,t_e,t_mu,t_f,comp,alpha,n,max_ave_H=1):
     ave,t_e,t_mu,t_f,comp,alpha,n should be the return values of rand_par_coex
     max_ave_H is the maximum value for average value for  H.
     H_i is uniformly distributed in [0,2*ave_H]"""
+    num = len(ave) #number of communities
     # choose distribution of H: H ~u[0,2*ave]
-    ave_H = uni(0,max_ave_H)
-    t_H = uni(-1/sqrt, 1/sqrt)
-    H = lambda x: ave_H*(1+t_H*sqrt*x)
-    #asymptotic EF in N, f(N) = f_i*H_i*N_i/(N_i+H_i)
+    ave_H = uni(0,max_ave_H,num)
+    t_H = uni(-1/sqrt, 1/sqrt,num) #stdv/mean of H
+    H = lambda x: ave_H*(1+t_H*sqrt*x) #H_i for each species in a community
+    
+    #asymptotic EF in N, EF(N) = f_i*H_i*N_i/(N_i+H_i)
     eco_fun = lambda x, N: n*(1+t_f*x*sqrt)*H(x)*N(x)/(N(x)+H(x))
+    
     # computes the equilibrium densities of species N, in changed and ref site
     N_ref = lambda x: (1+t_mu*sqrt*x-comp)/(1+alpha)
     N_change = lambda x: ((1+x*t_mu*sqrt)*(1-ave*(1+t_e*sqrt*x))-\
                 comp*(1-ave*(1+t_mu*t_e)))/(1+alpha)
     
-    # Integrate for the average, divide by 2 for normalisation
-    EF_ref = quad(lambda x: eco_fun(x,N_ref)/2,-1,1)[0] 
-    EF_change = quad(lambda x: eco_fun(x,N_change)/2,-1,1)[0]
+    # integrate over all species for EF
+    x_simp = np.array(num*[np.linspace(-1,1,51)]) #x_axes
+    y_ref = eco_fun(x_simp.T, N_ref).T #y_values in ref
+    y_change = eco_fun(x_simp.T, N_change).T #y values in changed site
+    EF_ref = simps(y_ref,x_simp) 
+    EF_change = simps(y_change,x_simp)
     return 100*(EF_change-EF_ref)/EF_ref #multiply by 100 for percent
