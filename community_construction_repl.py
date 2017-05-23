@@ -11,15 +11,22 @@ import pickle
 
 from numpy.random import uniform as uni
 from scipy.integrate import simps
+
+sqrt = np.sqrt(3) #is needed often in the program
+n = 20 #number of species, constant for all cases
       
 def vec_uni(low, high):
     """returns a random variable between low and high, uniform distribution
     
-    low and high must be array-like with same shape.
-    low is the lower bound of the uniform distribution, hight is the upperbound
+    Parameters:
+        low: array like
+            lower boundaries for distributions
+        high: array like
+            higher boundaries for distributions, must have same shape as low
     
-    returns: An array of same shape as low and high. Each entry in this array
-    is a randomvariable uniformly distributed in low, high.
+    Returns:
+        rand_var: array like
+            Same shape as low and high. Contains the random variables
     
     Examples:
     low = np.array([0,0,2])
@@ -28,52 +35,63 @@ def vec_uni(low, high):
     # result[0] is uniformly distributed in [0,1]
     # result[1] is uniformly distributed in [0,2]
     # result[2] is uniformly distributed in [2,4]"""
-    high = np.array(high)
+    high = np.array(high) #convert to arrays
     low = np.array(low)
     return low+(high-low)*uni(size = low.shape)  #linear transformation
 
-sqrt = np.sqrt(3) #is needed often in the program
-n = 20 #number of species, assumed 20 for all cases with replacing species
-
 def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
               ad_com = 0.005,num_com = 100000):
-    """ returns randomized parameters for one community
-    
-    Input:
-    num_com: number of species to be generated
-    p: Percent of species that are in ref and changed site (Type b species)
-    accepts float or 'rand'. 'rand will randomly generate values for p
-    Note that p should be i/20 to make biologically sense
-    ave_max and ave_min: the maximum/minimum that are allowed for the
-    average sensitivity of each species type
-    e_max, e_min: the maximum/minimum that are allowed for the sensitivity
-    of each species (individually)
-    ad_com: Proportion of additionally computed communities.
+    """ returns randomized parameters for num_com communities
     
     The function randomly generates num_com*(1+ad_com) communities until it
     finds num_com communities fullfilling all coexistence requirements. This
     method slightly shifts the distribution of alpha and e towards 0. The 
-    error in the distribution is smaller than ad_com    
+    error in the distribution is smaller than ad_com   
+    Pleasse refer to supplementary data 7 to understand the code
     
-    av: average, t: stdv/average,
-    to understand the equations consult supplement data 7
+    Input:
+        num_com: scalar
+            number of species to be generated
+        p:  scalar or string
+            Percent of species that are in ref and changed site (Type b species)
+            p*n must be an integer or p ='rand'
+            'rand will randomly generate values for p
+            Note: p = 1 is NOT equivalent to coex.rand_par, because of the
+            coexistence requirements.
+        ave_max, ave_min: scalar<1, ave_min<=ave_max
+            the maximum/minimum that are allowed for the
+            average sensitivity of each species type
+        e_max, e_min: scalar<1, e_min<=ave_min,ave_max<=e_max
+            the maximum/minimum that are allowed for the sensitivity
+            of each species (individually)
+        ad_com: scalar
+            Proportion of additionally computed communities.
     
     returns:
-        mu: Contains all growth rates and some associated values
-        f: contains the per capita contributions
-        e: contains the sensitivity
-        comp: Relative competition
-        p: Percent of species that are in ref and changed site (Type b species)
+        mu: dict
+            Contains all growth rates and some associated values
+        e:  dict
+            contains the sensitivity
+        comp: array
+            Relative competition
+        f:  dict
+            contains the per capita contributions
+        p_ret:  array
+            Percent of species that are in ref and changed site (Type b species)
+            if p was a scalar, then p_ret = p*np.ones(num_com).
+        alpha: array
+            competition parameter        
         """
     #check input correctness
     if not(e_min<=ave_min<=ave_max<=e_max):
         raise InputError("Please sort the input: e_min<=ave_min<=ave_max<=e_max")
-    if e_max>1:
+    if e_max>1: #growth rate of that species would be negative
         raise InputError("e_max>1, effects above 1 are not allowed")
+    if not (p=='rand' or p*n==int(p*n)): #a species goes extinct or not
+        raise InputError("p must either be 'rand' or p*n must be an integer")
     
     #number of communities to construct
     num = int(np.ceil(num_com*(1+ad_com)))
-    
     
     # fixed parameters, do not change to find communities
     e_fix = {'avb':uni(ave_min,ave_max,num), #average effect on species b
@@ -88,13 +106,14 @@ def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
             'tb': np.zeros(num)}
     alpha = uni(-0.95,-0.05,num) # interaction coecfficient
     comp_fix = -alpha*n/(1-alpha*(n-1)) #effective competition , computed
-    comp = comp_fix
+    # Fixed communities fullfill coexistence requirements
     not_fix = np.array(num*[True])
     # percent of species with type C
     if p is 'rand':
         p_fix = np.random.randint(1,n-1,num)/n
     else:
         p_fix = p*np.ones(num)
+        
     #randomly generate communities, until num_com many fullfill coex. req.
     #attention, changing settings might turn this into an infinite loop
     while num>num_com*ad_com:
@@ -103,6 +122,7 @@ def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
         p = p_fix[not_fix]
         q = 1-p
         comp = comp_fix[not_fix]
+
         # min(mu['avb'],mu['avu'])/(p*mu['avb']+q*mu['avu'])>comp
         mu = {'avb': uni(0,10,num)}
         mu['avu'] = vec_uni(mu['avb']*comp*p/(1-q*comp),
@@ -146,7 +166,8 @@ def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
         # average growthrate of entire community in changed site
         mu['av_change'] = p*mu['avb_change']+q*mu['avc_change']
         
-        # reference types are assumed to have e_i = 1, always         
+        # reference types are assumed to have e_i = 1, always 
+        # if this part of the code is changed, please also change in coex_test        
         # e['avu'] = 1 #change if desired differently
         # e['tu'] = 0
         
@@ -157,6 +178,7 @@ def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
             e_fix[k][not_fix] = e[k]
         for k in mu_fix.keys():
             mu_fix[k][not_fix] = mu[k]
+
         #check which species can coexist and update not_fix
         coex = coex_test(mu,e,comp)
         not_fix[not_fix] = np.logical_not(coex)
@@ -184,15 +206,25 @@ def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
     avfb, avfu, avfc = uni(0.5,1.5,[3,num_com]) #averages of f
     f = {'avb':avfb,'avu':avfu,'avc':avfc,\
          'tb':t_fb,'tu':t_fu,'tc':t_fc}
-
-    return mu_ret, e_ret,f,comp_ret,alpha_ret,p_ret# community fullfills coexistence
+    # communities fullfill coexistence
+    return mu_ret, e_ret,comp_ret,f,p_ret,alpha_ret
      
 
-def coex_test(mu, e,comp):
-    """tests if coexistence is given in changed site; see supp. Info 11
+def coex_test(mu, e,comp, f = None, p = None, alpha = None):
+    """tests if coexistence is given in changed site; see supp. Info 7
     
-    input should be the output of rand_par_repl
+    Input: 
+        mu, e, comp:
+            As in output of rand_par
+        f, alpha, p: optional
+            Are not needed. They are just used s.t. one can
+            run coex_test(rand_par(*args))
     
+    returns:
+        coex: array, dtype = boolean
+            An array with coex rewuirements. True means, that this comunitiy
+            fullfills the coexistence requirements
+            
     Note: Does not check coexistence conditions in reference site,
     nor that U species cannot survive in changed site and vice versa
     These conditions are always fullfilled by the chosen parameter settings
@@ -217,10 +249,25 @@ def coex_test(mu, e,comp):
     return np.logical(minimal>comp, maximal<comp)"""
     return minimal>comp
 
-def EF_fun(mu,f,alpha,p,s,cov,adjust=1):
+def EF_fun(mu,f,alpha,p,site,cov,adjust=True):
     """ computes the EF of the given system
     
+    Input
+        mu, f, alpha, p:
+            as in output of rand_par
+        s: "change" or "ref"
+            Site EF is computed for
+        cov: dict
+            containing the covariances of mu and f
+        adjust: boolean
+            Set to False to see the effect f the adjusment terms       
+    returns: 
+        EF: array
+            Array containing EF at site
+        
     For computational background see Eq. 6"""
+    s = {"ref": ['u',''], "change": ['c','_change']}[site]
+    adjust = int(True)
     q = 1-p
     comp = -alpha*n/(1-alpha*(n-1))
     EF1 = n*f['avb']*mu['avb'+s[1]]/(1+alpha)*(cov['b'+s[1]]+1-comp)
@@ -229,12 +276,20 @@ def EF_fun(mu,f,alpha,p,s,cov,adjust=1):
                             *(mu['avb'+s[1]]-mu['av'+s[0]+s[1]])
 
     
-def delta_EF_lin(mu, e,f,comp,alpha,p, adjust = 1):
+def delta_EF_lin(mu, e,comp,f,p, alpha,adjust = True):
     """computes \DeltaEF/EF in the case of changing composition
     
     For computational background see Eq. 7
+    per capita contribution is assumed constant
     
-    adjust can be set to 0 to see the effect of the adjustmentterms"""
+    Input
+        mu, e, comp, f, alpha, p:
+            As in output of rand_par
+        adjust: boolean
+            Set to False to see the effect f the adjusment terms  
+    returns: 
+        deltaEF/EF: array
+            Array containing 100*deltaEF/EF"""
     #covariances of the relative distributions
     cov = {'b': mu['tb']*f['tb'], 'u': mu['tu']*f['tu']} 
     cov['b_change'] = f['tb']*(mu['tb']*(1/e['avb']-1)-e['tb'])\
@@ -242,18 +297,30 @@ def delta_EF_lin(mu, e,f,comp,alpha,p, adjust = 1):
     cov['c_change'] = f['tc']*(mu['tc']*(1/e['avc']-1)-e['tc'])\
                         /(1/e['avc']-1-e['tc']*mu['tc'])
     #ecosystem funcitoning at reference site
-    EF_u = EF_fun(mu,f,alpha,p,['u',''],cov,adjust)
+    EF_u = EF_fun(mu,f,alpha,p,"ref",cov,adjust)
     #ecosystem funcitoning at changed site
-    EF_c = EF_fun(mu,f,alpha,p,['c','_change'],cov,adjust)
+    EF_c = EF_fun(mu,f,alpha,p,"change",cov,adjust)
     return 100*(EF_c-EF_u)/EF_u #multiply by 100, result in percent
     
-def delta_EF_asym(mu, e,f,comp,alpha,p, max_ave_H=1):
+def delta_EF_asym(mu, e,comp,f,p, alpha = None, max_ave_H=1):
     """computes the EF with asymptotic f, f(N) = f_i*H_i*N_i/(N_i+H_i)
     
-    mu, e,f,comp,alpha,p should be the return values of rand_par_repl
-    max_ave_H is the maximum value for average value for  H.
-    H_i is uniformly distributed in [0,2*ave_H*mu['av']]"""
-    num = len(alpha)
+    For more information see S10
+    H_i is uniformly distributed in [0,2*ave_H]
+    
+    Input
+        mu, e, comp, f, p:
+            As in output of rand_par
+        alpha: optional
+            Is not needed. They are just used s.t. one can
+            run delta_EF_asym
+        max_ave_H: scalar, optional
+            maximum for the average of H, maximum over all communities
+        
+    returns: 
+        deltaEF/EF: array
+            Array containing 100*deltaEF/EF, asymptotic contribution to EF"""
+    num = len(alpha) #number of species
     # choose distributions of H: H ~u[0,2*ave]
     temp = uni(0,max_ave_H,3)
     gam = {'avb':temp[0],'avu':temp[1],'avc':temp[2]}
@@ -280,14 +347,14 @@ def delta_EF_asym(mu, e,f,comp,alpha,p, max_ave_H=1):
              'u': eco_fun(x_simp.T, 'u',N_ref).T}#y_values in ref
     y_cha = {'b': eco_fun(x_simp.T, 'b',N_change).T,
              'c': eco_fun(x_simp.T, 'c',N_change).T}#y_values in change
-    
+    # compute the EF
     EF_ref = n*(p*simps(y_ref['b'],x_simp)+(1-p)*simps(y_ref['u'],x_simp))
     EF_change = n*(p*simps(y_cha['b'],x_simp)+(1-p)*simps(y_cha['c'],x_simp))
     return 100*(EF_change-EF_ref)/EF_ref #multiply by 100 for percent
     
 #load the communities
 try:
-    para = pickle.load(open("repl1, com_para.p", "rb"))
+    para = pickle.load(open("repl, com_para.p", "rb"))
 except FileNotFoundError: #file not computed yet, will be computed
     import parameters_construction
     para = parameters_construction.para_return(rand_par)
@@ -300,7 +367,6 @@ class InputError(Error):
     """Exception raised for errors in the input.
 
     Attributes:
-        expr -- input expression in which the error occurred
         msg  -- explanation of the error
     """
 
