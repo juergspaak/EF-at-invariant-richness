@@ -35,8 +35,8 @@ def vec_uni(low, high):
 sqrt = np.sqrt(3) #is needed often in the program
 n = 20 #number of species, assumed 20 for all cases with replacing species
 
-def rand_par(num_com = 1000, p = 'rand', ave_max = 0.5, e_max = 1,
-                  ave_min = -0.5, e_min = -1, ad_com = 0.005):
+def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
+              ad_com = 0.005,num_com = 100000):
     """ returns randomized parameters for one community
     
     Input:
@@ -65,8 +65,16 @@ def rand_par(num_com = 1000, p = 'rand', ave_max = 0.5, e_max = 1,
         comp: Relative competition
         p: Percent of species that are in ref and changed site (Type b species)
         """
-    num = int(np.ceil(num_com*(1+ad_com))) #number of communities to construct
-
+    #check input correctness
+    if not(e_min<=ave_min<=ave_max<=e_max):
+        raise InputError("Please sort the input: e_min<=ave_min<=ave_max<=e_max")
+    if e_max>1:
+        raise InputError("e_max>1, effects above 1 are not allowed")
+    
+    #number of communities to construct
+    num = int(np.ceil(num_com*(1+ad_com)))
+    
+    
     # fixed parameters, do not change to find communities
     e_fix = {'avb':uni(ave_min,ave_max,num), #average effect on species b
             'avc': np.zeros(num), #will be filled with data while running
@@ -125,9 +133,11 @@ def rand_par(num_com = 1000, p = 'rand', ave_max = 0.5, e_max = 1,
         e['avc'] = vec_uni(tresh1, tresh2)
         
         # choose borders, that e_i are within [e_min, e_max]
-        minimum = np.amin(np.abs([e_max/e['avc']-1, 1-e_min/e['avb']]),axis =0)
+        minimum = np.amin([np.sign(e['avb'])*(e_max/e['avb']-1),
+                np.sign(e['avb'])*(1-e_min/e['avb'])], axis = 0)
         e['tb'] = uni(-minimum/sqrt,minimum/sqrt)
-        minimum = np.amin(np.abs([e_max/e['avc']-1, 1-e_min/e['avc']]),axis =0)
+        minimum = np.amin([np.sign(e['avc'])*(e_max/e['avc']-1),
+                np.sign(e['avc'])*(1-e_min/e['avc'])], axis = 0)
         e['tc'] = vec_uni(-minimum/sqrt,minimum/sqrt)
         
         # average growthsrates in changed site of the species types
@@ -281,4 +291,18 @@ try:
 except FileNotFoundError: #file not computed yet, will be computed
     import parameters_construction
     para = parameters_construction.para_return(rand_par)
-          
+    
+class Error(Exception):
+    """Base class for exceptions in this module."""
+    pass
+
+class InputError(Error):
+    """Exception raised for errors in the input.
+
+    Attributes:
+        expr -- input expression in which the error occurred
+        msg  -- explanation of the error
+    """
+
+    def __init__(self, msg):
+        self.msg = msg

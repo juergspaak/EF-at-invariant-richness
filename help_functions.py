@@ -4,30 +4,6 @@ This program contains fucntions for plotting and computing several communities
 """
 import matplotlib.pyplot as plt
 import numpy as np
-
-def com_con(rand_par, num_com, **kwargs):
-    """community constructor, returns a list with different communities
-    
-    rand_par should be a rand_par function of community_construction_coex
-    or community_construction_repl
-    num_com: Integer, number of communities to construct
-    **kwargs: Use to set ave_min, ave_max, e_min, e_max"""
-    com_paras = []
-    for i in range(num_com):
-        com_paras.append(rand_par(**kwargs))
-    return com_paras
-    
-def comp_EF(delta_EF, com_para,**kwargs):
-    """computes delta_EF/EF for the different communities
-    
-    delta_EF must be a function to compute delta_EF
-    com_para must be a list containing community parameters
-    delta_EF(com_para[i]) must be executable
-    **kwargs can be used for the adjustment terms"""
-    EF_data = np.zeros(len(com_para))
-    for (i,para) in list(enumerate(com_para)):
-        EF_data[i] = delta_EF(*com_para[i],**kwargs)
-    return EF_data
     
 def percentiles(datas,keys,color, y_min=None, y_max = None,labels = None,
                        fsize = 16,ticks = False, ls = None, plot = None):
@@ -81,7 +57,7 @@ def percentiles(datas,keys,color, y_min=None, y_max = None,labels = None,
         y_Min = min(y_Min, data_pos[0], data_neg[0]) #min and max for plot
         y_Max = max(y_Max, data_pos[-1],data_neg[-1])
     #axis labels
-    fig.gca().set_ylabel(r'$100\cdot\Delta EF/EF$', fontsize=fsize)
+    fig.gca().set_ylabel(r'$100\cdot\Delta EF/EF_u$', fontsize=fsize)
     fig.gca().set_xlabel("percentile", fontsize=fsize)
     #min and max predefined by user?
     if y_min is None:
