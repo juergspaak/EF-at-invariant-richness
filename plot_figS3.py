@@ -5,31 +5,26 @@ This files plots Fig. S3
 import matplotlib.pyplot as plt
 import numpy as np
 
-import help_functions as hef
+from percentiles import percentiles
 import community_construction_coex as coex
 
-#ensure that loading worked
-try:
-    coex.para
-except AttributeError:
-    coex.error()
 
 sqrt = np.sqrt(3)
 #get the parameters
-t_values = {'e>0,t_e': [par[1] for par in coex.para['e>0']],
-        'e<0,t_e': [par[1] for par in coex.para['e<0']],
-        'e>0,t_mu': [par[2] for par in coex.para['e>0']],
-        'e<0,t_mu': [par[2] for par in coex.para['e<0']],
-        'uniform': np.linspace(-1/sqrt, 1/sqrt,len(coex.para['e>0']))}
-n = {'e>0,': [par[-1] for par in coex.para['e>0']],
-     'e<0,': [par[-1] for par in coex.para['e<0']],
-     'uniform': sorted(np.random.randint(5,21,len(coex.para['e>0'])))}
+t_values = {'e>0,t_e': coex.para['e>0'][1],
+        'e<0,t_e': coex.para['e<0'][1],
+        'e>0,t_mu': coex.para['e>0'][2],
+        'e<0,t_mu': coex.para['e<0'][2],
+        'uniform': np.linspace(-1/sqrt, 1/sqrt,len(coex.para['e>0'][0]))}
+n = {'e>0,': coex.para['e>0'][-2],
+     'e<0,': coex.para['e<0'][-2],
+     'uniform': sorted(np.random.randint(5,21,len(coex.para['e>0'][-2])))}
 
 #plotting
 fig, (ax1,ax2) = plt.subplots(2,1,figsize =(9,10))
-hef.percentiles(t_values, ['t_e', 't_mu'],["red","green"], 
+percentiles(t_values, ['t_e', 't_mu'],["red","green"], 
                          plot = (fig,ax1))
-ax1.plot(np.linspace(0,100,len(coex.para['e>0'])),t_values['uniform'])
+ax1.plot(np.linspace(0,100,len(coex.para['e>0'][0])),t_values['uniform'])
 
 simArtist = plt.Line2D((0,1),(0,0), color='k', marker='v', linestyle='')
 anyArtist = plt.Line2D((0,2),(0,0), color='k',marker='^', linestyle='')
@@ -40,9 +35,9 @@ ax1.legend(loc = "upper left")
 ax1.legend(handles[:3]+[simArtist,anyArtist],
            ['t_e', 't_mu', 'uniform','e<0', 'e>0']
            ,loc = "upper left", numpoints = 1)
-hef.percentiles(n, [''],['magenta'], 
+percentiles(n, [''],['magenta'], 
                          plot = (fig,ax2))
-ax2.plot(np.linspace(0,100,len(coex.para['e>0'])),n['uniform'], )
+ax2.plot(np.linspace(0,100,len(coex.para['e>0'][-2])),n['uniform'], )
 ax2.set_ylim(ymin = 4, ymax = 21)
 ax2.legend(handles[-2:]+[simArtist,anyArtist],
            ['uniform', 'n','e<0', 'e>0']

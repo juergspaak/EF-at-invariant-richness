@@ -7,70 +7,57 @@ import numpy as np
 
 from scipy.stats import linregress
 
-import help_functions as hef
+from percentiles import percentiles
 import community_construction_coex as coex
 import community_construction_repl as repl
 
-#ensure that loading worked
-try:
-    coex.para
-except AttributeError:
-    coex.error()
-try:
-    repl.para
-except AttributeError:
-    repl.error() 
-
 sqrt = np.sqrt(3)
 # computes the relative change in average growthrate (mu-mu')/mu
-eff_ave = {'e>0,coex': [par[0] for par in coex.para['e>0']],
-        'e<0,coex': [par[0] for par in coex.para['e<0']]}
+eff_ave = {'e>0,coex': coex.para['e>0'][0],
+        'e<0,coex': coex.para['e<0'][0]}
 keys = ['e<0,0.95', 'e<0,0.50', 'e<0,rand', 'e<0,0.05',
         'e>0,0.95', 'e>0,0.50', 'e>0,rand', 'e>0,0.05']
 
 #same for species replacing
 eff_ave_prov = np.zeros(len(repl.para[keys[0]]))
 for key in keys:
-    for i,par in enumerate(repl.para[key]):
-        mu, e,f,comp,alpha,p = par
-        mu_av = p*mu['avb']+(1-p)*mu['avu']
-        eff_ave_prov[i] = (mu_av-mu['av_change'])/mu_av
-    eff_ave[key] = eff_ave_prov.copy()
+    mu, e,comp,f,p, alpha = repl.para[key]
+    mu_av = p*mu['avb']+(1-p)*mu['avu'] #average growth rate in ref site
+    eff_ave[key] = (mu_av-mu['av_change'])/mu_av
     
 keys = ['coex','0.95', '0.50', 'rand', '0.05']
 labels = ["p = 1.00,", "p = 0.95", "p = 0.50", "p is random", "p = 0.05"]
 color = ['blue','green','red', 'cyan', 'purple']
 #plot S4
-S5,ax = hef.percentiles(eff_ave, keys, color, labels = labels)
+S5,ax = percentiles(eff_ave, keys, color, labels = labels)
 ax.set_ylabel(r"$(\overline{\mu}-\overline{\mu'})/\overline{\mu}$",
                fontsize = 16)
 
 key = 'rand'
 adapted_para = {}
-itera = len(eff_ave['e<0,'+key])
+num = len(eff_ave['e<0,'+key]) #number of communities
 #generate invariant community with similar effects on density by change
 for change in ['e<0,', 'e>0,']:
     #linearly approximate the change in \mu
     slope, intercept, a,b,c = \
-        linregress(np.linspace(0,100, itera),sorted(eff_ave[change+key]))
+        linregress(np.linspace(0,100, num),sorted(eff_ave[change+key]))
     ave_max = 100*slope+intercept # maximum for average
     ave_min = intercept #minimum for average
     dist = min(ave_min -(-1), 1-ave_max) #distance to boundaray [-1,1]
     e_min, e_max = ave_min-dist, ave_max+dist #to have symmetric conditions
-    adapted_para[change] = hef.com_con(coex.rand_par, itera,
-                           ave_min = ave_min, ave_max = ave_max,
-                           e_min = e_min, e_max = e_max)
+    adapted_para[change] = coex.rand_par(ave_min = ave_min, ave_max = ave_max,
+                           e_min = e_min, e_max = e_max, num=num)
 
 # in growth rates of new comunities
-eff_ave.update({'e>0,ad': [par[0] for par in adapted_para['e>0,']],
-        'e<0,ad': [par[0] for par in adapted_para['e<0,']]})
+eff_ave.update({'e>0,ad': adapted_para['e>0,'][0],
+        'e<0,ad': adapted_para['e<0,'][0]})
 
 #compute EF for comparison
-EF_data = {key+'ad': hef.comp_EF(coex.delta_EF_lin, adapted_para[key]) 
+EF_data = {key+'ad': coex.delta_EF_lin(*adapted_para[key]) 
             for key in adapted_para.keys()}
-EF_data.update({key: hef.comp_EF(repl.delta_EF_lin, repl.para[key]) 
+EF_data.update({key: repl.delta_EF_lin(*repl.para[key]) 
             for key in repl.para.keys()})
-EF_data.update({key+',coex': hef.comp_EF(coex.delta_EF_lin, coex.para[key]) 
+EF_data.update({key+',coex': coex.delta_EF_lin(*coex.para[key]) 
             for key in coex.para.keys()})
 
 #plotting
@@ -79,11 +66,11 @@ ref_col = color[keys.index(key)] #to have matching colors
 color = [ref_col, 'orange', 'blue']
 labels = ['Changing community', r'Adapted e', r'Normal e']
 ticks = [-80,-60,-40,-20,0,20,40,60,80,100]
-hef.percentiles(eff_ave, [key, 'ad', 'coex'], color,labels = labels,
-                y_max = 0.6, ticks = ticks, plot = (S5, ax1))
+percentiles(eff_ave, [key, 'ad', 'coex'], color,labels = labels,
+                y_max = 0.6, ticks = ticks, plot = (S6, ax1))
 ticks = [-0.5,-0.4,-0.3,-0.2,-0.1,0.0,0.1,0.2,0.3,0.4,0.5]
-hef.percentiles(EF_data, [key, 'ad', 'coex'], color,labels = labels,
-                y_max = 100, plot = (S5, ax2))
+percentiles(EF_data, [key, 'ad', 'coex'], color,labels = labels,
+                y_max = 100, plot = (S6, ax2))
 ax1.set_xlabel("percentile", fontsize = 16)
 ax1.set_ylabel(r"$(\overline{\mu}-\overline{\mu'})/\overline{\mu}$",
                fontsize = 16)

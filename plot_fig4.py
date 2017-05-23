@@ -5,14 +5,8 @@ This program was used to make Fig.5
 import numpy as np
 import matplotlib.pyplot as plt
 
-import help_functions as hef
+from percentiles import percentiles
 import community_construction_coex as coex
-
-#ensure that loading worked
-try:
-    coex.para
-except AttributeError:
-    coex.error()
 
 #different values for H that are used:
 keys = ['100','2', '1','0.5','0.1']
@@ -39,18 +33,16 @@ keys = ['100','2', '1','0.5','0.1']
 EF_data = {}
 #compute asymptotic functioning for different averages of H
 for key in keys:
-    EF_data["e<0,"+key] = \
-        hef.comp_EF(coex.delta_EF_asym,coex.para["e<0"],max_ave_H=float(key))
+    EF_data["e<0,"+key] = coex.delta_EF_asym(\
+                    *coex.para["e<0"],max_ave_H=float(key))
     print("Progress report: e<0, H="+key+" is done" )
-    EF_data["e>0,"+key] = \
-        hef.comp_EF(coex.delta_EF_asym,coex.para["e>0"],max_ave_H=float(key))
+    EF_data["e>0,"+key] = coex.delta_EF_asym(\
+                    *coex.para["e>0"],max_ave_H=float(key))
     print("Progress report: e>0, H="+key+" is done" )
     
 #compare to linear functioning        
-EF_data["e<0,ref"] = \
-        hef.comp_EF(coex.delta_EF_lin,coex.para["e<0"])
-EF_data["e>0,ref"] = \
-        hef.comp_EF(coex.delta_EF_lin,coex.para["e>0"])
+EF_data["e<0,ref"] = coex.delta_EF_lin(*coex.para["e<0"])
+EF_data["e>0,ref"] = coex.delta_EF_lin(*coex.para["e>0"])
 keys.append("ref")
 # plot results
 ticks = [-60,-40,-20,0,20,40,60,80,100]
@@ -58,7 +50,7 @@ ticks = [-60,-40,-20,0,20,40,60,80,100]
 labels = [r'max$(\overline{H})=100$',r'max$(\overline{H})=2$',
           r'max$(\overline{H})=1$',r'max$(\overline{H})=0.5$',
           r'max$(\overline{H})=0.1$',"Ref. Linear functioning"]
-fig,ax2 = hef.percentiles(EF_data, keys, y_max = 100, ticks = ticks,
+fig,ax2 = percentiles(EF_data, keys, y_max = 100, ticks = ticks,
        labels = labels,color = color, plot = (fig,ax2))
 ax2.set_title('B. EF with asymptotic functioning', fontsize = 16)
 

@@ -1,6 +1,6 @@
 """
 @author: J.W. Spaak
-This program contains fucntions for plotting and computing several communities
+This program contains fucntions for plotting
 """
 import matplotlib.pyplot as plt
 import numpy as np

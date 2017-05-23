@@ -267,7 +267,7 @@ def EF_fun(mu,f,alpha,p,site,cov,adjust=True):
         
     For computational background see Eq. 6"""
     s = {"ref": ['u',''], "change": ['c','_change']}[site]
-    adjust = int(True)
+    adjust = int(adjust)
     q = 1-p
     comp = -alpha*n/(1-alpha*(n-1))
     EF1 = n*f['avb']*mu['avb'+s[1]]/(1+alpha)*(cov['b'+s[1]]+1-comp)
