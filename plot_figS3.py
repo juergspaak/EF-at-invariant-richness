@@ -1,6 +1,6 @@
 """
 @author: J.W. Spaak
-This files plots Fig. S3
+This programm plots Fig. S3
 """
 import matplotlib.pyplot as plt
 import numpy as np

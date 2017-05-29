@@ -1,6 +1,6 @@
 """
 @author: J.W. Spaak
-This program was used to make Fig.2
+This programm plots Fig. 2
 """
 import numpy as np
 

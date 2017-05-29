@@ -1,6 +1,6 @@
 """
 @author: J.W. Spaak
-This program was used to make Fig.3
+This programm plots Fig. 3
 """
 from percentiles import percentiles
 import community_construction_repl as repl

@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
-Created on Wed Dec 14 08:06:03 2016
-
-@author: spaakjue
+@author: J.W. Spaak
+This programm plots Fig.S4
 """
 import numpy as np
 import matplotlib.pyplot as plt

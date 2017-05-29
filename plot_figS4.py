@@ -1,6 +1,6 @@
 """
 @author: J.W. Spaak
-This program plots Fig.S4
+This programm plots Fig.S4
 """
 import matplotlib.pyplot as plt
 
