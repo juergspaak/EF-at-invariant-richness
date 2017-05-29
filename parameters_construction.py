@@ -6,14 +6,15 @@ import pickle
 from timeit import default_timer as timer
 from warnings import warn
 
+warn_message = "The file 'repl, com_para.p' has not been found. It will be "+\
+    "generated automatically and saved into the current folder. "+\
+    "This file will contain communitiy parameters to be used in the future. "+\
+    "This will take some minutes."
 def para_return(fun):
-    warn("The file 'repl, com_para.p' has not been found. It will be "+
-                 "generated automatically and saved into the current folder."+
-                 "This file will contain communitiy parameters that will be "+
-                 " used in the future. This will take some minutes.")
+    warn(warn_message)
     
     
-    num_com = int(1e5)
+    num = int(1e5)
     #generate communities for different p
     keys = ['0.50','0.95' , 'rand', '0.05']
     count = 0
@@ -24,19 +25,19 @@ def para_return(fun):
             p= float(key)
         except ValueError:
             p = key
-        para['e>0,'+key] = fun(p=p,ave_min=0,e_min=0, num_com = num_com)
+        para['e>0,'+key] = fun(p=p,ave_min=0,e_min=0, num = num)
         now = timer()-start
         count+=1
         print("About {}/8 have been computed so far \n".format(count)+
                "time needed so far:{} seconds\nFinish ".format(now)+
-               "within approximately {} seconds".format(now/count*(8-count)))
+               "within approximately {} seconds\n".format(now/count*(8-count)))
         
-        para['e<0,'+key] = fun(p=p,ave_max=0,e_max=0,num_com = num_com)
+        para['e<0,'+key] = fun(p=p,ave_max=0,e_max=0,num = num)
         now = timer()-start
         count+=1
         print("About {}/8 have been computed so far \n".format(count)+
                "time needed so far:{} seconds\nFinish ".format(now)+
-               "within approximately {} seconds".format(now/count*(8-count)))
+               "within approximately {} seconds\n".format(now/count*(8-count)))
     
     #save data for future use  
     pickle.dump(para, open("repl, com_para.p","wb"))
