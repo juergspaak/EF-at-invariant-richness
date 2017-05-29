@@ -15,8 +15,8 @@ from numpy.random import uniform as uni
 from scipy.integrate import simps
 
 sqrt = np.sqrt(3) #is needed often in the program
-        
-def vec_uni(low, high):
+
+def dist(low = 0, high = 1, size = None):
     """returns a random variable between low and high, uniform distribution
     
     Parameters:
@@ -24,7 +24,9 @@ def vec_uni(low, high):
             lower boundaries for distributions
         high: array like
             higher boundaries for distributions, must have same shape as low
-    
+        size: integer, optional
+            size of randomvariables to be generated. If size is not None, then
+            high and low must be floats
     Returns:
         rand_var: array like
             Same shape as low and high. Contains the random variables
@@ -36,9 +38,16 @@ def vec_uni(low, high):
     # result[0] is uniformly distributed in [0,1]
     # result[1] is uniformly distributed in [0,2]
     # result[2] is uniformly distributed in [2,4]"""
-    high = np.array(high) #convert to arrays
-    low = np.array(low)
-    return low+(high-low)*uni(size = low.shape)  #linear transformation
+    if size == None:
+        size = low.shape
+        low = np.array(low)
+        high = np.array(high)
+    else:
+        low = low*np.ones(size) #convert low and high into right shape
+        high = high*np.ones(size)
+    # choose the type of the distributions
+    dist_fun = np.random.uniform
+    return low+(high-low)*dist_fun(size = size)  #linear transformation
 
 def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,num = 100000):
     """returns randomized parameters for num communities
@@ -79,11 +88,11 @@ def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,num = 100000):
     if e_max>1:
         raise InputError("e_max>1, effects above 1 are not allowed")
     #these values are fixed from the beginning, do not change while running
-    ave = uni(ave_min,ave_max, num) # average sensitivity
-    alpha = uni(-0.95,-0.05, num) #interaction coefficient
+    ave = dist(ave_min,ave_max, num) # average sensitivity
+    alpha = dist(-0.95,-0.05, num) #interaction coefficient
 
     # does not affect coexistence
-    t_f = uni(-1/sqrt, 1/sqrt,num) # stdv/mean of per capita contribution
+    t_f = dist(-1/sqrt, 1/sqrt,num) # stdv/mean of per capita contribution
     
     # not_fix = False means values will not change in future runs
     not_fix = np.array(num*[True]) 
@@ -98,12 +107,12 @@ def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,num = 100000):
         see appendix G in supplement data, folder results"""
         n = np.random.randint(5,21,num) # number of species
         comp = -alpha[not_fix]*n/(1-alpha[not_fix]*(n-1)) #effective competition
-        t_mu = vec_uni(comp-1,1-comp)/sqrt #min(mu)/mean(mu)>comp
+        t_mu = dist(comp-1,1-comp)/sqrt #min(mu)/mean(mu)>comp
         
         #ensures, that sensitivity e_i  is in [e_min, e_max]
         minimum = np.amin([np.sign(ave[not_fix])*(e_max/ave[not_fix]-1),
                     np.sign(ave[not_fix])*(1-e_min/ave[not_fix])], axis = 0)
-        t_e = vec_uni(-minimum/sqrt,minimum/sqrt)
+        t_e = dist(-minimum/sqrt,minimum/sqrt)
         
         #save ALL new computed values in not fixed communities
         t_e_fix[not_fix] = t_e
@@ -184,6 +193,7 @@ def delta_EF_asym(ave,t_e,t_mu,comp,t_f,n,alpha = None,max_ave_H = 1):
     H = lambda x: ave_H*(1+t_H*sqrt*x) #H_i for each species in a community
     
     #asymptotic EF in N, EF(N) = f_i*H_i*N_i/(N_i+H_i)
+    #change to consider different contribution to function
     eco_fun = lambda x, N: n*(1+t_f*x*sqrt)*H(x)*N(x)/(N(x)+H(x))
     
     # computes the equilibrium densities of species N, in changed and ref site

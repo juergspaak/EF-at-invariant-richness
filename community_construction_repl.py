@@ -15,7 +15,7 @@ from scipy.integrate import simps
 sqrt = np.sqrt(3) #is needed often in the program
 n = 20 #number of species, constant for all cases
       
-def vec_uni(low, high):
+def dist(low = 0, high = 1, size = None):
     """returns a random variable between low and high, uniform distribution
     
     Parameters:
@@ -23,7 +23,9 @@ def vec_uni(low, high):
             lower boundaries for distributions
         high: array like
             higher boundaries for distributions, must have same shape as low
-    
+        size: integer, optional
+            size of randomvariables to be generated. If size is not None, then
+            high and low must be floats
     Returns:
         rand_var: array like
             Same shape as low and high. Contains the random variables
@@ -35,10 +37,17 @@ def vec_uni(low, high):
     # result[0] is uniformly distributed in [0,1]
     # result[1] is uniformly distributed in [0,2]
     # result[2] is uniformly distributed in [2,4]"""
-    high = np.array(high) #convert to arrays
-    low = np.array(low)
-    return low+(high-low)*uni(size = low.shape)  #linear transformation
-
+    if size == None:
+        size = low.shape
+        low = np.array(low)
+        high = np.array(high)
+    else:
+        low = low*np.ones(size) #convert low and high into right shape
+        high = high*np.ones(size)
+    # choose the type of the distributions
+    dist_fun = np.random.uniform
+    return low+(high-low)*dist_fun(size = size)  #linear transformation
+    
 def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
               ad_com = 0.005,num = 100000):
     """ returns randomized parameters for num_com communities
@@ -96,7 +105,7 @@ def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
     num = int(np.ceil(num_com*(1+ad_com)))
     
     # fixed parameters, do not change to find communities
-    e_fix = {'avb':uni(ave_min,ave_max,num), #average effect on species b
+    e_fix = {'avb':dist(ave_min,ave_max,num), #average effect on species b
             'avc': np.zeros(num), #will be filled with data while running
             'tc': np.zeros(num),
             'tb': np.zeros(num)} 
@@ -126,24 +135,24 @@ def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
         comp = comp_fix[not_fix]
 
         # min(mu['avb'],mu['avu'])/(p*mu['avb']+q*mu['avu'])>comp
-        mu = {'avb': uni(0,10,num)}
-        mu['avu'] = vec_uni(mu['avb']*comp*p/(1-q*comp),
+        mu = {'avb': dist(0,10,num)}
+        mu['avu'] = dist(mu['avb']*comp*p/(1-q*comp),
             np.amin([mu['avb']*(1-p*comp)/(q*comp),10*np.ones(num)], axis = 0))
         
         #coexistence limit, min(mu)/mean(mu)>comp
         tresh1 = comp*(p*mu['avb']+q*mu['avu'])
         # chosen such that min (mu_u,mu_b) > tresh1, i.e. coexist
-        mu['tb'] =vec_uni(-(1-tresh1/mu['avb'])/sqrt,(1-tresh1/mu['avb'])/sqrt)
-        mu['tu'] =vec_uni(-(1-tresh1/mu['avu'])/sqrt,(1-tresh1/mu['avu'])/sqrt)
+        mu['tb'] =dist(-(1-tresh1/mu['avb'])/sqrt,(1-tresh1/mu['avb'])/sqrt)
+        mu['tu'] =dist(-(1-tresh1/mu['avu'])/sqrt,(1-tresh1/mu['avu'])/sqrt)
         
         # mu['avc']*(1-ave_min) must be able to coexist in changed site
         tresh2 = mu['avb']*(1-e['avb'])*p*comp/(1-comp*q)/(1-ave_min)
         # we always have treshhold2<treshhold1
-        mu['avc'] = vec_uni(tresh2,tresh1)
+        mu['avc'] = dist(tresh2,tresh1)
         
         # ensure, that min(mu_c) fullfills same conditions as mu['avc']
         dist = np.amin([tresh1/mu['avc']-1, 1-tresh2/mu['avc']],axis = 0)/sqrt
-        mu['tc'] = vec_uni(-dist,dist)
+        mu['tc'] = dist(-dist,dist)
         
         # mu['avc']*(1-e['avc']) fullfills coexistence conditions
         # choose min for e['avc']
@@ -152,7 +161,7 @@ def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
         # choose max for e['avc']
         tresh2 = np.amin([1-mu['avb']/mu['avc']*(1-e['avb'])/(1-comp*q)\
                      *(p*comp),ave_max*np.ones(num)],axis = 0)
-        e['avc'] = vec_uni(tresh1, tresh2)
+        e['avc'] = dist(tresh1, tresh2)
         
         # choose borders, that e_i are within [e_min, e_max]
         minimum = np.amin([np.sign(e['avb'])*(e_max/e['avb']-1),
@@ -160,7 +169,7 @@ def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
         e['tb'] = uni(-minimum/sqrt,minimum/sqrt)
         minimum = np.amin([np.sign(e['avc'])*(e_max/e['avc']-1),
                 np.sign(e['avc'])*(1-e_min/e['avc'])], axis = 0)
-        e['tc'] = vec_uni(-minimum/sqrt,minimum/sqrt)
+        e['tc'] = dist(-minimum/sqrt,minimum/sqrt)
         
         # average growthsrates in changed site of the species types
         mu['avb_change'] = mu['avb']*e['avb']*(1/e['avb']-1 - mu['tb']*e['tb'])
@@ -331,6 +340,7 @@ def delta_EF_asym(mu, e,comp,f,p, alpha = None, max_ave_H=1):
     H = lambda x,t: gam['av'+t]*(1+gam['t'+t]*sqrt*x)\
                     *mu['av'+t]*(1+mu['t'+t]*x*sqrt)
     #asymptotic EF in N, f(N) = f_i*H_i*N_i/(N_i+H_i)
+    #change to consider different contribution to function
     eco_fun = lambda x,t, N: f['av'+t]*(1+f['t'+t]*x*sqrt)*H(x,t)*N(x,t)\
                                    /(N(x,t)+H(x,t))
     
