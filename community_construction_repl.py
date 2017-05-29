@@ -40,7 +40,7 @@ def vec_uni(low, high):
     return low+(high-low)*uni(size = low.shape)  #linear transformation
 
 def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
-              ad_com = 0.005,num_com = 100000):
+              ad_com = 0.005,num = 100000):
     """ returns randomized parameters for num_com communities
     
     The function randomly generates num_com*(1+ad_com) communities until it
@@ -89,7 +89,9 @@ def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
         raise InputError("e_max>1, effects above 1 are not allowed")
     if not (p=='rand' or p*n==int(p*n)): #a species goes extinct or not
         raise InputError("p must either be 'rand' or p*n must be an integer")
-    
+        
+    #save the original number of communites   
+    num_com = num
     #number of communities to construct
     num = int(np.ceil(num_com*(1+ad_com)))
     
