@@ -2,7 +2,7 @@
 @author: J.W. Spaak
 This programm plots Fig. 3
 """
-from percentiles import percentiles
+import percentiles
 import community_construction_repl as repl
 import community_construction_coex as coex
     
@@ -20,9 +20,20 @@ keys = ['ref']+keys
 # plot results
 ticks = [-80,-60,-40,-20,0,20,40,60,80,100]
 labels = ["p = 1.00,", "p = 0.95", "p = 0.50", "p is random", "p = 0.05"]
-color = ['blue','green','red', 'cyan', 'purple']
+color = ['yellow','orange','red', 'cyan', 'purple']
+
+ax,ind = percentiles.bars(EF_data, keys, color)
+ax.set_xlim([-0.2,5])
+
+ax.set_xticks(ind)
+ax.set_xticklabels(labels)
+
+ax.set_xlabel("Percent of species present at both sites", fontsize = 16)
+
 #plottig percentile curves
-fig,ax = percentiles(EF_data, keys,y_min = -80, y_max = 100, 
+fig,ax = percentiles.percentiles(EF_data, keys,y_min = -80, y_max = 100, 
         ticks = ticks,color = color, labels = labels)
+
+
 #save figure
 fig.savefig("Figure 3, changing community structure.pdf")

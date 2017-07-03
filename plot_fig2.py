@@ -4,7 +4,7 @@ This programm plots Fig. 2
 """
 import numpy as np
 
-from percentiles import percentiles
+import percentiles
 import community_construction_coex as coex
     
 #split into different covariances
@@ -27,9 +27,24 @@ labels = [r'cov$(|e|,\mu) = 1$, cov$(e,f)=1$',
               r'cov$(|e|,\mu) = -1$, cov$(e,f)=1$',
             r'cov$(|e|,\mu) = -1$, cov$(e,f)=-1$',
             r'cov$(|e|,\mu) = 1$, cov$(e,f)=-1$']
-color = ['purple','red', 'green', 'blue']
+color = ['purple','red', 'orange', 'yellow']
+
+ax, ind = percentiles.bars(EF_covs, keys, color)
+ax.set_xlim(-0.2,4)
+ 
+ax.set_xticks(ind)
+ax.set_xticklabels(2*[r'cov$(|e|,\mu) = 1$',r'cov$(|e|,\mu) = -1$'])
+
+ax.set_xlabel("Covariances of sensitivity and growthrates", fontsize = 16)
+
+ax2 = ax.twiny()
+ax2.set_xticks([0.25,0.75])
+ax2.set_xticklabels([r'cov$(|e|,f) = 1$',r'cov$(|e|,f) = -1$'])
+ax2.set_xlabel("Covariances of sensitivity and per-capita contribution", 
+               fontsize = 16)
+
 #plot percentile curves
-fig,ax = percentiles(EF_covs, keys, y_max = 100, ticks = ticks,
-        color = color, labels = labels)
+fig,ax3 = percentiles.percentiles(EF_covs, keys, y_max = 100, ticks = ticks,
+       color = color, labels = labels)
 #save figure
-fig.savefig("Figure 2, Covariances.pdf")
+#fig.savefig("Figure 2, Covariances.pdf")

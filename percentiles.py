@@ -4,7 +4,46 @@ This program contains fucntions for plotting
 """
 import matplotlib.pyplot as plt
 import numpy as np
+
+def bars(datas,keys, color):
+    per_pos = {}
+    per_neg = {}
     
+    for per in [5,25,50,75,95]:
+        per_pos[str(per)] = []
+        per_neg[str(per)] = []
+        for key in keys:
+            
+            per_pos[str(per)].append(np.percentile(datas['e>0,'+key], per))
+            
+            per_neg[str(per)].append(np.percentile(datas['e<0,'+key], per))
+        per_pos[str(per)] = np.array(per_pos[str(per)])
+        per_neg[str(per)] = np.array(per_neg[str(per)])
+    
+    width = 0.8
+    ind = np.arange(len(keys))
+    fig, ax = plt.subplots(figsize = (9,7))
+    
+    
+    yerr = [per_pos['75']-per_pos['5'],per_pos['95']-per_pos['75']]
+    
+    ax.bar(ind, per_pos['75']-per_pos['25'], width/2, 
+                       bottom = per_pos['25'], yerr = yerr, 
+                       color = color, ecolor = 'red', alpha = 0.5)
+    
+    ind = np.arange(len(keys))+width/2
+    yerr = [per_neg['75']-per_neg['5'],per_neg['95']-per_neg['75']]
+    ax.bar(ind, per_neg['75']-per_neg['25'], width/2, 
+                       bottom = per_neg['25'], yerr = yerr, 
+                       color = color,ecolor = 'blue', alpha = 0.5)
+    plt.plot(ind-width/4, per_pos['50'], 'ro')
+    plt.plot(ind+width/4, per_neg['50'], 'bo')
+    ax.set_yticks([-80,-60,-40,-20,0,20,40,60,80,100])
+    ax.set_ylim(-80,100)
+    ax.set_ylabel(r'$100\cdot\Delta EF/EF_u$', fontsize=16)
+    return ax, ind
+
+  
 def percentiles(datas,keys,color, y_min=None, y_max = None,labels = None,
                        fsize = 16,ticks = False, ls = None, plot = None):
     """ plots the percentile curves for all data sets in datas
