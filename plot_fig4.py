@@ -5,7 +5,7 @@ This programm plots Fig. 4
 import numpy as np
 import matplotlib.pyplot as plt
 
-from percentiles import percentiles
+import percentiles
 import community_construction_coex as coex
 
 #different values for H that are used:
@@ -27,7 +27,7 @@ ax1.set_xlabel(r'$N/N^*$', fontsize=16)
 ax1.set_ylabel(r'$f$', fontsize=16)
 ax1.legend(loc = "lower left", fontsize = 13)
 ax1.set_title("A. Examples of asymptotic functions", fontsize = 16)
-
+color = ["red", "yellow", "orange", "black", "magenta","orange"]
 keys = ['100','2', '1','0.5','0.1']
 # contains all EF datas
 EF_data = {}
@@ -50,7 +50,8 @@ ticks = [-60,-40,-20,0,20,40,60,80,100]
 labels = [r'max$(\overline{H})=100$',r'max$(\overline{H})=2$',
           r'max$(\overline{H})=1$',r'max$(\overline{H})=0.5$',
           r'max$(\overline{H})=0.1$',"Ref. Linear functioning"]
-fig,ax2 = percentiles(EF_data, keys, y_max = 100, ticks = ticks,
+percentiles.bars(EF_data, keys, color, labels)
+fig,ax2 = percentiles.percentiles(EF_data, keys, y_max = 100, ticks = ticks,
        labels = labels,color = color, plot = (fig,ax2))
 ax2.set_title('B. EF with asymptotic functioning', fontsize = 16)
 
