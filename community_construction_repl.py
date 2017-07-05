@@ -151,8 +151,8 @@ def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
         mu['avc'] = dist(tresh2,tresh1)
         
         # ensure, that min(mu_c) fullfills same conditions as mu['avc']
-        dist = np.amin([tresh1/mu['avc']-1, 1-tresh2/mu['avc']],axis = 0)/sqrt
-        mu['tc'] = dist(-dist,dist)
+        bound = np.amin([tresh1/mu['avc']-1, 1-tresh2/mu['avc']],axis = 0)/sqrt
+        mu['tc'] = dist(-bound,bound)
         
         # mu['avc']*(1-e['avc']) fullfills coexistence conditions
         # choose min for e['avc']
@@ -215,6 +215,7 @@ def rand_par(e_min=-1, ave_min = -0.5, ave_max = 0.5, e_max = 1,p='rand',
     # generate distribution of per capita contributions for species types
     t_fb, t_fu, t_fc = uni(-1/sqrt, 1/sqrt,[3,num_com]) # stdv/mean
     avfb, avfu, avfc = uni(0.5,1.5,[3,num_com]) #averages of f
+    
     f = {'avb':avfb,'avu':avfu,'avc':avfc,\
          'tb':t_fb,'tu':t_fu,'tc':t_fc}
     # communities fullfill coexistence
@@ -260,7 +261,7 @@ def coex_test(mu, e,comp, f = None, p = None, alpha = None):
     return np.logical(minimal>comp, maximal<comp)"""
     return minimal>comp
 
-def EF_fun(mu,f,alpha,p,site,cov,adjust=True):
+def EF_fun(mu,f,alpha,p,site,cov):
     """ computes the EF of the given system
     
     Input
@@ -278,16 +279,15 @@ def EF_fun(mu,f,alpha,p,site,cov,adjust=True):
         
     For computational background see Eq. 6"""
     s = {"ref": ['u',''], "change": ['c','_change']}[site]
-    adjust = int(adjust)
     q = 1-p
     comp = -alpha*n/(1-alpha*(n-1))
     EF1 = n*f['avb']*mu['avb'+s[1]]/(1+alpha)*(cov['b'+s[1]]+1-comp)
     EF2 = n*f['av'+s[0]]*mu['av'+s[0]+s[1]]/(1+alpha)*(cov[s[0]+s[1]]+1-comp)
-    return p*EF1+q*EF2+adjust*p*q*n*comp/(1+alpha)*(f['avb']-f['av'+s[0]])\
+    return p*EF1+q*EF2+p*q*n*comp/(1+alpha)*(f['avb']-f['av'+s[0]])\
                             *(mu['avb'+s[1]]-mu['av'+s[0]+s[1]])
 
     
-def delta_EF_lin(mu, e,comp,f,p, alpha,adjust = True):
+def delta_EF_lin(mu, e,comp,f,p, alpha, sim_f = True):
     """computes \DeltaEF/EF in the case of changing composition
     
     For computational background see Eq. 7
@@ -297,20 +297,27 @@ def delta_EF_lin(mu, e,comp,f,p, alpha,adjust = True):
         mu, e, comp, f, alpha, p:
             As in output of rand_par
         adjust: boolean
-            Set to False to see the effect f the adjusment terms  
+            Set to False to see the effect f the adjusment terms
+        sim_f: boolean
+            If True, all species will have same distributions for f
     returns: 
         deltaEF/EF: array
             Array containing 100*deltaEF/EF"""
+    fi = f.copy()
+    if sim_f:
+        for let in ['c','u']:
+            fi['t'+let] = fi['tb']
+            fi['av'+let] = fi['avb']
     #covariances of the relative distributions
-    cov = {'b': mu['tb']*f['tb'], 'u': mu['tu']*f['tu']} 
-    cov['b_change'] = f['tb']*(mu['tb']*(1/e['avb']-1)-e['tb'])\
+    cov = {'b': mu['tb']*fi['tb'], 'u': mu['tu']*fi['tu']} 
+    cov['b_change'] = fi['tb']*(mu['tb']*(1/e['avb']-1)-e['tb'])\
                         /(1/e['avb']-1-e['tb']*mu['tb'])
-    cov['c_change'] = f['tc']*(mu['tc']*(1/e['avc']-1)-e['tc'])\
+    cov['c_change'] = fi['tc']*(mu['tc']*(1/e['avc']-1)-e['tc'])\
                         /(1/e['avc']-1-e['tc']*mu['tc'])
     #ecosystem funcitoning at reference site
-    EF_u = EF_fun(mu,f,alpha,p,"ref",cov,adjust)
+    EF_u = EF_fun(mu,fi,alpha,p,"ref",cov)
     #ecosystem funcitoning at changed site
-    EF_c = EF_fun(mu,f,alpha,p,"change",cov,adjust)
+    EF_c = EF_fun(mu,fi,alpha,p,"change",cov)
     return 100*(EF_c-EF_u)/EF_u #multiply by 100, result in percent
     
 def delta_EF_asym(mu, e,comp,f,p, alpha = None, max_ave_H=1):
