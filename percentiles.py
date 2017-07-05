@@ -5,7 +5,8 @@ This program contains fucntions for plotting
 import matplotlib.pyplot as plt
 import numpy as np
 
-def bars(datas,keys, color):
+def bars(datas,keys, fig = None, ax = None, col = ['red', 'green'],
+         leg = 'upper right'):
     per_pos = {}
     per_neg = {}
     
@@ -22,28 +23,31 @@ def bars(datas,keys, color):
     
     width = 0.4
     ind = np.arange(len(keys))*0.7
-    fig, ax = plt.subplots(figsize = (9,7))
+    if fig == None:
+        ind +=0.05
+        fig, ax = plt.subplots(figsize = (9,7))
     
     
     yerr = [per_pos['75']-per_pos['5'],per_pos['95']-per_pos['75']]
     
     ax.bar(ind, per_pos['75']-per_pos['25'], width,  yerr = yerr, 
-                       bottom = per_pos['25'],edgecolor = 'red',linewidth= 1.5,
-                       fill =False, ecolor = 'red')
+                       bottom = per_pos['25'],edgecolor = col[0],linewidth= 1.5,
+                       fill =False, ecolor = col[0])
     
-    ind = np.arange(len(keys))*0.7+width/4
+    ind += width/4
     yerr = [per_neg['75']-per_neg['5'],per_neg['95']-per_neg['75']]
     ax.bar(ind, per_neg['75']-per_neg['25'], width, yerr = yerr,
-                       bottom = per_neg['25'], edgecolor = 'g', linewidth= 1.5, 
-                       fill =False, ecolor = 'green')
-    plt.plot(ind+width/4, per_pos['50'], 'ro')
-    plt.plot(ind+width/2, per_neg['50'], 'go')
+                       bottom = per_neg['25'], edgecolor = col[1], linewidth= 1.5, 
+                       fill =False, ecolor = col[1])
+    plt.scatter(ind+width/4, per_pos['50'], 40,col[0])
+    plt.scatter(ind+width/2, per_neg['50'], 40,col[1])
     ax.set_yticks([-80,-60,-40,-20,0,20,40,60,80,100])
     ax.set_ylim(-80,100)
     ax.set_ylabel(r'$100\cdot\Delta EF/EF_u$', fontsize=16)
-    neg = ax.bar(0,0,width = 0 ,color = 'white', edgecolor = 'g',linewidth=1.5)
-    pos = ax.bar(0,0,width = 0 ,color = 'white', edgecolor = 'r',linewidth=1.5)
-    ax.legend([neg,pos],['e<0', 'e>0'])
+    pos = ax.bar(0,0,width = 0 ,color = 'white',edgecolor=col[0],linewidth=1.5)
+    neg = ax.bar(0,0,width = 0 ,color = 'white',edgecolor=col[1],linewidth=1.5)
+
+    ax.legend([neg,pos],['e<0', 'e>0'], loc = leg)
     return fig, ax, ind
 
  

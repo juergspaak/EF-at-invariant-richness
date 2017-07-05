@@ -21,7 +21,6 @@ for key in ['e>0,', 'e<0,']:
                 
 EF_covs = {key: coex.delta_EF_lin(*(par_covs[key])) for key in par_covs.keys()}       
 # plot results
-ticks = [-60,-40,-20,0,20,40,60,80,100]
 
 labels = [r'cov$(|e|,\mu) = 1$, cov$(e,f)=1$',
               r'cov$(|e|,\mu) = -1$, cov$(e,f)=1$',
@@ -29,14 +28,13 @@ labels = [r'cov$(|e|,\mu) = 1$, cov$(e,f)=1$',
             r'cov$(|e|,\mu) = 1$, cov$(e,f)=-1$']
 color = ['purple','cyan', 'orange', 'yellow']
 
-fig, ax, ind = percentiles.bars(EF_covs, keys, color)
+fig, ax, ind = percentiles.bars(EF_covs, keys)
 ax.set_xlim(-0.2, 2.8)
-
+ax.set_ylim(-60,100)
  
 ax.set_xticks(ind+0.15)
 ax.set_xticklabels(2*[r'cov$(|e|,\mu) = 1$',r'cov$(|e|,\mu) = -1$'],
                    fontsize = 14)
-
 ax.set_xlabel("Covariances of sensitivity and growthrates", fontsize = 16)
 
 ax2 = ax.twiny()
@@ -46,8 +44,4 @@ ax2.set_xticklabels([r'cov$(|e|,f) = 1$',r'cov$(|e|,f) = -1$']
 ax2.set_xlabel("Covariances of sensitivity and per-capita contribution", 
                fontsize = 16)
 fig.savefig("Figure 2, Covariances, barplots.pdf")
-#plot percentile curves
-fig,ax3 = percentiles.percentiles(EF_covs, keys, y_max = 100, ticks = ticks,
-       color = color, labels = labels)
-#save figure
-#fig.savefig("Figure 2, Covariances.pdf")
+

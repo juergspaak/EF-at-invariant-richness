@@ -9,25 +9,9 @@ import percentiles
 import community_construction_coex as coex
 
 #different values for H that are used:
-keys = ['100','2', '1','0.5','0.1']
 
-fig, (ax1,ax2) = plt.subplots(1,2,figsize =(18,7))
-# asymptotic functions used
-H = lambda N, aveH: aveH/(aveH+N)
-# plot these different functions
-color = ["red", "green", "blue", "black", "magenta","orange"]
-H_functions = {key: H(np.linspace(0,1,1000),float(key)) for key in keys[:5]}
-for (i,key) in enumerate(keys):
-    ax1.plot(np.linspace(0,1,1000),H_functions[key], label = "H = "+key
-             ,color = color[i])
 
-# x-axis: densitiy of species relative to equilibrium density
-ax1.set_xlabel(r'$N/N^*$', fontsize=16)
-# y-axis: total fun contributed by this species (not per capita contribution)
-ax1.set_ylabel(r'$f$', fontsize=16)
-ax1.legend(loc = "lower left", fontsize = 13)
-ax1.set_title("A. Examples of asymptotic functions", fontsize = 16)
-color = ["red", "yellow", "orange", "black", "magenta","orange"]
+
 keys = ['100','2', '1','0.5','0.1']
 # contains all EF datas
 EF_data = {}
@@ -43,17 +27,21 @@ for key in keys:
 #compare to linear functioning        
 EF_data["e<0,ref"] = coex.delta_EF_lin(*coex.para["e<0"])
 EF_data["e>0,ref"] = coex.delta_EF_lin(*coex.para["e>0"])
-keys.append("ref")
+keys = ['ref', '100','2', '1','0.5','0.1']
 # plot results
-ticks = [-60,-40,-20,0,20,40,60,80,100]
 
-labels = [r'max$(\overline{H})=100$',r'max$(\overline{H})=2$',
+labels = ['Ref',r'max$(\overline{H})=100$',r'max$(\overline{H})=2$',
           r'max$(\overline{H})=1$',r'max$(\overline{H})=0.5$',
-          r'max$(\overline{H})=0.1$',"Ref. Linear functioning"]
-percentiles.bars(EF_data, keys, color, labels)
-fig,ax2 = percentiles.percentiles(EF_data, keys, y_max = 100, ticks = ticks,
-       labels = labels,color = color, plot = (fig,ax2))
-ax2.set_title('B. EF with asymptotic functioning', fontsize = 16)
+          r'max$(\overline{H})=0.1$']
+fig, ax, ind = percentiles.bars(EF_data, keys)
 
-#save figure
-fig.savefig("Figure 4, Asymptotic functioning.pdf")
+ax.set_xlim([-0.2,ind[-1]+0.7])
+
+ax.set_xticks(ind+0.15)
+ax.set_xticklabels(labels)
+ax.set_ylim(-60, 80)
+pos = ax.bar(0,0,width = 0 ,color = 'white',edgecolor='red',linewidth=1.5)
+neg = ax.bar(0,0,width = 0 ,color = 'white',edgecolor='green',linewidth=1.5)
+
+ax.legend([neg,pos],['e<0', 'e>0'], loc = 'upper right')
+fig.savefig("Newfigure S_, asymptotic fucntioning, 5barplots.pdf")
