@@ -9,17 +9,16 @@ import matplotlib.pyplot as plt
 comp=lambda n,alpha: -alpha*n/(1-alpha*(n-1))
 
 #sample alphas
-alphas=np.linspace(-1,0,1000)
-fig=plt.figure()
+alphas = np.linspace(-1,0,1000)
+fig, ax = plt.subplots()
 for n in [2,5,10,15,20,100]:
-    comps=[comp(n,alpha) for alpha in alphas]
+    comps = [comp(n,alpha) for alpha in alphas]
     plt.plot(alphas,comps,label='n = ' + str(n))
-  
-plt.legend(loc='lower left')
-fig.gca().set_xlabel(r'$\alpha$',fontsize=14)
-fig.gca().set_ylabel(r'$C^n_{\alpha}$',fontsize=14)
 
-plt.show(fig)
+# add legend and labels
+plt.legend(loc='lower left')
+ax.set_xlabel(r'$\alpha$',fontsize=14)
+ax.set_ylabel(r'$C^n_{\alpha}$',fontsize=14)
 
 #save figure
 fig.savefig("Figure S1, competition.pdf")

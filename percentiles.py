@@ -7,47 +7,67 @@ import numpy as np
 
 def bars(datas,keys, fig = None, ax = None, col = ['red', 'green'],
          leg = 'upper right'):
-    per_pos = {}
-    per_neg = {}
+    """ plots boxplots for all data sets in datas
     
+    datas is a dictionary with the keys :"e<0,"+key[i] and "e>0,"+key[i],
+        the 0.05, 0.25, 0.50, 0.75, 0.95 percentiles of these will be plotted
+    fig, ax: figure and axis of the figure if boxes should be plotted
+        into a preexisting figure
+    keys are the keys of the datas
+    color = [color[0], color[1]]
+    leg is the location of the legend
+    
+    returns fig,ax the figure and the axis of the figure
+            ind index on x value of the boxes"""
+    per_pos = {} # dictionary containing the percentiles of the EF, for e>0
+    per_neg = {} # dictionary containing the percentiles of the EF, for e<0
+    
+    # compute the percentiles for all EF_data
     for per in [5,25,50,75,95]:
         per_pos[str(per)] = []
         per_neg[str(per)] = []
         for key in keys:
-            
+            # append the percentiles
             per_pos[str(per)].append(np.percentile(datas['e>0,'+key], per))
-            
             per_neg[str(per)].append(np.percentile(datas['e<0,'+key], per))
+        #convert to array
         per_pos[str(per)] = np.array(per_pos[str(per)])
         per_neg[str(per)] = np.array(per_neg[str(per)])
     
+    #width of boxes
     width = 0.4
-    ind = np.arange(len(keys))*0.7
-    if fig == None:
-        ind +=0.05
+    ind = np.arange(len(keys))*0.7 #index of boxes
+    if fig == None: # if plot needs to be continues
         fig, ax = plt.subplots(figsize = (9,7))
+    else:
+        ind += 0.05 #to avoid box overlaping
     
-    
+    # error bars (5 and 95 percentile)
     yerr = [per_pos['75']-per_pos['5'],per_pos['95']-per_pos['75']]
+    #plot the boxes
+    pos_bar = ax.bar(ind, per_pos['75']-per_pos['25'], width,  yerr = yerr, 
+           bottom = per_pos['25'],edgecolor = col[0],linewidth= 1.5,
+           fill =False, ecolor = col[0])
     
-    ax.bar(ind, per_pos['75']-per_pos['25'], width,  yerr = yerr, 
-                       bottom = per_pos['25'],edgecolor = col[0],linewidth= 1.5,
-                       fill =False, ecolor = col[0])
-    
-    ind += width/4
+    ind += width/4 #shift the boxes a little bit
+    # error bars (5 and 95 percentile)
     yerr = [per_neg['75']-per_neg['5'],per_neg['95']-per_neg['75']]
-    ax.bar(ind, per_neg['75']-per_neg['25'], width, yerr = yerr,
-                       bottom = per_neg['25'], edgecolor = col[1], linewidth= 1.5, 
-                       fill =False, ecolor = col[1])
+    #plot the boxes
+    neg_bar = ax.bar(ind, per_neg['75']-per_neg['25'], width, yerr = yerr,
+           bottom = per_neg['25'], edgecolor = col[1], linewidth= 1.5, 
+           fill =False, ecolor = col[1])
+    
+    # plot the medians
     plt.scatter(ind+width/4, per_pos['50'], 40,col[0])
     plt.scatter(ind+width/2, per_neg['50'], 40,col[1])
+    
+    # adjust axis
     ax.set_yticks([-80,-60,-40,-20,0,20,40,60,80,100])
     ax.set_ylim(-80,100)
     ax.set_ylabel(r'$100\cdot\Delta EF/EF_u$', fontsize=16)
-    pos = ax.bar(0,0,width = 0 ,color = 'white',edgecolor=col[0],linewidth=1.5)
-    neg = ax.bar(0,0,width = 0 ,color = 'white',edgecolor=col[1],linewidth=1.5)
-
-    ax.legend([neg,pos],['e<0', 'e>0'], loc = leg)
+    
+    # add legend
+    ax.legend([pos_bar[0],neg_bar[0]],['e<0', 'e>0'], loc = leg)
     return fig, ax, ind
 
  
