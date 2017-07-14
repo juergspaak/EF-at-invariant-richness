@@ -77,7 +77,7 @@ S6, ax, ind = percentiles.bars(EF_data_adapted, keys[1:],
 ax.set_xlim([-0.2,ind[-1]+0.7])
 ax.set_xticks(ind+0.15)
 ax.set_xticklabels(keys[1:])
-ax.set_xlabel("Proportion p of Species present at both Sites", fontsize = 16)
+ax.set_xlabel("Proportion p of species present at both sites", fontsize = 16)
 ax.set_ylim([-80,100])
 
 # add legend

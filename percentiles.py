@@ -39,8 +39,10 @@ def bars(datas,keys, fig = None, ax = None, col = ['red', 'green'],
     ind = np.arange(len(keys))*0.7 #index of boxes
     if fig == None: # if plot needs to be continues
         fig, ax = plt.subplots(figsize = (9,7))
+        zero_line = True
     else:
         ind += 0.05 #to avoid box overlaping
+        zero_line = False
     
     # error bars (5 and 95 percentile)
     yerr = [per_pos['75']-per_pos['5'],per_pos['95']-per_pos['75']]
@@ -68,6 +70,8 @@ def bars(datas,keys, fig = None, ax = None, col = ['red', 'green'],
     
     # add legend
     ax.legend([pos_bar[0],neg_bar[0]],['e<0', 'e>0'], loc = leg)
+    if zero_line:# add zero line
+        ax.plot([-0.2, ind[-1]+0.8], [0,0], '--', color = "0.5")
     return fig, ax, ind
 
  

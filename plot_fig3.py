@@ -22,8 +22,8 @@ ax.set_ylim(-80,80)
 ax.set_xlim([-0.2,ind[-1]+0.7])
 ax.set_xticks(ind+0.15)
 ax.set_xticklabels(keys)
-ax.set_xlabel("Proportion p of Species present at both Sites", fontsize = 16)
+ax.set_xlabel("Proportion p of species present at both sites", fontsize = 16)
 
 # save the figure
-fig.savefig("Figure 3, changing community structure, 7barplots.pdf")
+fig.savefig("Figure 3, changing community structure.pdf")
 

@@ -25,7 +25,7 @@ fig, ax, ind = percentiles.bars(EF_data_dif, keys, fig, ax, col = cols[2:])
 ax.set_xlim([-0.2,ind[-1]+0.7])
 ax.set_xticks(ind+0.15)
 ax.set_xticklabels(keys)
-ax.set_xlabel("Proportion p of Species present at both Sites", fontsize = 16)
+ax.set_xlabel("Proportion p of species present at both sites", fontsize = 16)
 ax.set_ylim([-80,140]) # add enough space for the legend
 
 # add legend            
@@ -35,5 +35,5 @@ lab = ['e>0, same f', 'e<0, same f', 'e>0, diff f', 'e<0, diff f']
 ax.legend([legend[col] for col in cols],lab, loc = 'upper left')
 
 # save figure
-fig.savefig("Figure newS5, diff f, 5barplots.pdf")
+fig.savefig("Figure S5, diff f.pdf")
 

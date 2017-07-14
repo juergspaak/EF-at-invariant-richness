@@ -33,7 +33,7 @@ for col in ['red','green','blue','magenta']:
     handles.append( plt.Line2D((0,2),(0,0), color=col))
 ax1.legend(loc = "upper left")
 ax1.legend(handles[:3]+[simArtist,anyArtist],
-           ['t_e', 't_mu', 'uniform','e<0', 'e>0']
+           [r'$t_e$', r'$t_\mu$', 'uniform','e<0', 'e>0']
            ,loc = "upper left", numpoints = 1)
 percentiles(n, [''],['magenta'], 
                          plot = (fig,ax2))

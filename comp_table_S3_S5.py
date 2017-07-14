@@ -38,7 +38,7 @@ tableS3 = DataFrame(np.round(matS3,2), ord_keys, ord_keys)
 print("Table S3")
 print(tableS3)
 #get all the distributions    
-mu, e,comp,f, p, alpha  = repl.para['e>0,rand']
+mu, e,comp,f, p, alpha  = repl.para['e>0,0.50']
 keys = ['avc', 'avb', 'tc' , 'tb','avu','tu']
 repl_arr = {'mu,'+key: mu[key] for key in keys}
 repl_arr.update({'e,'+key: e[key] for key in keys[:4]})

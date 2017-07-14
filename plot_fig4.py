@@ -34,4 +34,4 @@ ax.set_xticklabels(keys)
 ax.set_ylim(-60, 80)
 
 # save the figure
-fig.savefig("Figure newS_, asymptotic fucntioning, 5barplots.pdf")
+fig.savefig("Figure S4, asymptotic fucntioning.pdf")

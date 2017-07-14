@@ -30,17 +30,20 @@ ax.set_xlim([-0.2,ind[-1]+0.7])
 
 # Label at lower x-axis 
 ax.set_xticks(ind+0.15)
-ax.set_xticklabels(2*[r'cov$(|e|,\mu) = 1$',r'cov$(|e|,\mu) = -1$'],
+ax.set_xticklabels(2*[r'cov$(|e_r|,\mu_r) = 1$',r'cov$(|e_r|,\mu_r) = -1$'],
                    fontsize = 14)
-ax.set_xlabel("Covariances of Sensitivity and Growthrates", fontsize = 16)
+ax.set_xlabel("Covariances of env. effects and competitive strength", fontsize = 16)
 
 # label at upper x-axis
 ax2 = ax.twiny()
 ax2.set_xticks([0.25,0.75])
-ax2.set_xticklabels([r'cov$(|e|,f) = 1$',r'cov$(|e|,f) = -1$']
+ax2.set_xticklabels([r'cov$(|e_r|,f_r) = 1$',r'cov$(|e_r|,f_r) = -1$']
                     , fontsize = 14)
-ax2.set_xlabel("Covariances of Sensitivity and per-capita Contribution", 
+ax2.set_xlabel("Covariances of env. effects and per-capita contribution", 
                fontsize = 16)
 
 # save the figure
-fig.savefig("Figure 2, Covariances, barplots.pdf")
+fig.savefig("Figure 2, invariant community structure.pdf")
+
+# add dashed horizontal line at zero
+# change in all graphs sensitivity to env. Effects
