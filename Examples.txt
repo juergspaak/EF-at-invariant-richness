@@ -1,6 +1,6 @@
-Examples:
-The examples are given for both cases, the functions from community_construction_coex
-and community_construction_repl.
+#Examples:
+#The examples are given for both cases, the functions from community_construction_coex
+#and community_construction_repl.
 
 ################################################
 
@@ -30,7 +30,7 @@ asym_deltaEF = {key: delta_EF_asym(*com_para[key]) \
 		for key in com_para.keys()}
 
 #compute deltaEF/EF, asymptotic functioning, with low halfsaturating constant
-asym_deltaEF_lowH = {key:coex.delta_EF_asym(*com_para[key], max_ave_H = 0.2) \
+asym_deltaEF_lowH = {key:delta_EF_asym(*com_para[key], max_ave_H = 0.2) \
 		for key in com_para.keys()}
 
 #compare the effects on DeltaEF/EF of these communitis
@@ -40,6 +40,8 @@ for key in com_para.keys():
 	x_point = np.linspace(0,100,len(delta_EF[key]))
 	plt.plot(x_point,sorted(delta_EF[key]), label = key)
 plt.legend(loc = "upper left")
+plt.gca().set_ylabel(r'$100\cdot\Delta EF/EF_u$', fontsize=16)
+plt.gca().set_xlabel('percentiles', fontsize=16)
 
 #compare low halfsaturating constant with high saturating constant
 plt.subplots(figsize = (9,9))
@@ -52,14 +54,16 @@ for key in com_para.keys():
 				color = col[key],label = key+"low H")
 plt.axis([0,100,-100,100])
 plt.legend(loc = "upper left")
+plt.gca().set_ylabel(r'$100\cdot\Delta EF/EF_u$', fontsize=16)
+plt.gca().set_xlabel('percentiles', fontsize=16)
 
 #Example only for changing community structure:
 import community_construction_repl as repl
 #generate a community where 95% of the species survive the environmental change
-com_par_p95 = rand_par(p = 0.95)
+com_par_p95 = repl.rand_par(p = 0.95, num = 1000)
 ################################################
 
-
+"""
 Further examples can be found in the files:
 How to construct communities: "parameters of communities.py"
 
@@ -67,9 +71,9 @@ Use predefined comunities and compute theirs DeltaEF:
 plot_fig2.py, plot_fig3.py
 
 Use asymptotic functioning:
-plot_fig4.py
+plot_figS4.py
 
-Use keyword adjust in repl.delta_EF_lin:
-plot_figS3
+Use keyword sim_f in repl.delta_EF_lin:
+plot_figS5"""
 
 
