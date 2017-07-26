@@ -2,7 +2,7 @@
 @author: J.W. Spaak
 This programm plots Fig. 3
 """
-import percentiles
+from plot_functions import bars
 import community_construction_repl as repl
 import community_construction_coex as coex
  
@@ -15,7 +15,7 @@ EF_data["e>0,1.00"] = coex.delta_EF_lin(*coex.para["e>0"])
 
 # plot results
 keys = ['1.00', '0.95', '0.75', '0.50','0.25', '0.05']
-fig, ax,ind = percentiles.bars(EF_data, keys)
+fig, ax,ind = bars(EF_data, keys)
 
 # adjust x and y axis
 ax.set_ylim(-80,80)

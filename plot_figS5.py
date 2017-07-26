@@ -2,7 +2,7 @@
 @author: J.W. Spaak
 This programm plots Fig. S4
 """
-import percentiles
+from plot_functions import bars
 import community_construction_repl as repl
   
 
@@ -17,9 +17,9 @@ EF_data_dif = {key: repl.delta_EF_lin(*repl.para[key], sim_f = False)
 keys = ['0.95', '0.75', '0.50','0.25', '0.05']
 cols = ['#CF0000', '#90FB90','#800000', '#006400']
 # plot the delta EF communities with same f
-fig, ax, ind = percentiles.bars(EF_data, keys, col =cols[:2])
+fig, ax, ind = bars(EF_data, keys, col =cols[:2])
 # add the deltaEF of the different f communities
-fig, ax, ind = percentiles.bars(EF_data_dif, keys, fig, ax, col = cols[2:])
+fig, ax, ind = bars(EF_data_dif, keys, fig, ax, col = cols[2:])
 
 # adjust axis
 ax.set_xlim([-0.2,ind[-1]+0.7])

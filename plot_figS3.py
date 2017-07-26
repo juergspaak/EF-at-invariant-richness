@@ -5,7 +5,7 @@ This programm plots Fig. S3
 import matplotlib.pyplot as plt
 import numpy as np
 
-from percentiles import percentiles
+from plot_functions import percentiles
 import community_construction_coex as coex
 
 

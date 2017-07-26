@@ -2,7 +2,7 @@
 @author: J.W. Spaak
 This programm plots Fig. 4
 """
-import percentiles
+from plot_functions import bars
 import community_construction_coex as coex
 
 #different values for H that are used:
@@ -24,7 +24,7 @@ EF_data["e>0,ref"] = coex.delta_EF_lin(*coex.para["e>0"])
 
 # plot results
 keys = ['ref'] + keys
-fig, ax, ind = percentiles.bars(EF_data, keys)
+fig, ax, ind = bars(EF_data, keys)
 
 # adjust axis
 ax.set_xlim([-0.2,ind[-1]+0.7])

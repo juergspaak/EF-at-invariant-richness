@@ -4,7 +4,7 @@ This programm plots Fig. 2
 """
 import numpy as np
 
-import percentiles
+from plot_functions import bars
 import community_construction_coex as coex
    
 # split into different covariances
@@ -22,7 +22,7 @@ for key in ['e>0,', 'e<0,']:
 EF_covs = {key: coex.delta_EF_lin(*(par_covs[key])) for key in par_covs.keys()}       
 
 # plot results
-fig, ax, ind = percentiles.bars(EF_covs, keys)
+fig, ax, ind = bars(EF_covs, keys)
 
 # limits
 ax.set_ylim(-60,100)
