@@ -1,30 +1,16 @@
 """
 @author: J.W. Spaak
-Contains all functions, that are needed to generate communities as well as
-compute the EF of those communities
+Contains a non vectorized version of rand_par an coex_test
 
-rand_par randomly generates a community and checks whether this community
-is able to coexist in the ref and the changed site(does so via coex_test)
-
-delta_EF_lin computes \DeltaEF/EF with linear contribution to function
-delta_EF_asym with asymptotic function
+rand_par randomly generates ONE community and checks whether this community
+is able to coexist in the ref and the changed site (does so via coex_test)
 """
 
 import numpy as np
-import pickle
 
 from numpy.random import uniform as uni
-from scipy.integrate import quad
 
 sqrt = np.sqrt(3)
-#load the communities
-try:
-    para = pickle.load(open("coex, com_para.p", "rb"))
-except FileNotFoundError: #other functions should be still be available
-    def error():
-        raise FileNotFoundError("No such file or directory: 'coex, com_para.p'"
-            "\nPlease run the file 'parameters of communities.py "+
-            "to create this file. Read the readme for further instructions.")
 
 def rand_par(ave_max = 0.5, e_max = 1,
                   ave_min = -0.5,e_min = -1):
@@ -41,13 +27,13 @@ def rand_par(ave_max = 0.5, e_max = 1,
     
     ave = uni(ave_min,ave_max) # average sensitivity
     alpha = uni(-0.95,-0.05) #interaction coefficient
+    t_f = uni(-1/sqrt, 1/sqrt) # stdv/mean of per capita contribution
     parameters = [1,0,0,0,0,0,0] #values that do not coexist
     # runs until community that coexists is found
-    # WARNING: changing settings might turn this into an infinite loop
     while not (coex_test(*parameters)):
         """to understand why these parameters are chosen in this way, 
         see appendix G in supplement data, folder results"""
-        t_f = uni(-1/sqrt, 1/sqrt) # stdv/mean of per capita contribution
+        
         n = np.random.randint(5,21) # number of species
         comp = -alpha*n/(1-alpha*(n-1)) #effective competition
         t_mu = uni(comp-1,1-comp)/sqrt
@@ -68,34 +54,3 @@ def coex_test(ave,t_e,t_mu,t_f,comp,alpha,n):
     min1 = mu_change(t_mu, ave, t_e,1)/(1/ave-1-t_mu*t_e)
     min2 = mu_change(t_mu, ave, t_e,-1)/(1/ave-1-t_mu*t_e)
     return min(min1, min2)>comp
-    
-def delta_EF_lin(ave,t_e,t_mu,t_f,comp,alpha,n):
-    """ computes DetalEF/EF for one community
-    
-    for computational background see Eq. 4"""
-    save_1 = -(1+t_mu*t_e)*ave
-    save_2 = t_f*(t_mu+t_e)/(1+t_mu*t_e)-t_f*t_mu
-    save_3 = t_mu*t_f+1-comp
-    return 100*save_1*(1+save_2/save_3)
-    
-def delta_EF_asym(ave,t_e,t_mu,t_f,comp,alpha,n,max_ave_H=1):
-    """computes the EF with asymptotic f, f(N) = f_i*H_i*N_i/(N_i+H_i)
-    
-    ave,t_e,t_mu,t_f,comp,alpha,n should be the return values of rand_par_coex
-    max_ave_H is the maximum value for average value for  H.
-    H_i is uniformly distributed in [0,2*ave_H]"""
-    # choose distribution of H: H ~u[0,2*ave]
-    ave_H = uni(0,max_ave_H)
-    t_H = uni(-1/sqrt, 1/sqrt)
-    H = lambda x: ave_H*(1+t_H*sqrt*x)
-    #asymptotic EF in N, f(N) = f_i*H_i*N_i/(N_i+H_i)
-    eco_fun = lambda x, N: n*(1+t_f*x*sqrt)*H(x)*N(x)/(N(x)+H(x))
-    # computes the equilibrium densities of species N, in changed and ref site
-    N_ref = lambda x: (1+t_mu*sqrt*x-comp)/(1+alpha)
-    N_change = lambda x: ((1+x*t_mu*sqrt)*(1-ave*(1+t_e*sqrt*x))-\
-                comp*(1-ave*(1+t_mu*t_e)))/(1+alpha)
-    
-    # Integrate for the average, divide by 2 for normalisation
-    EF_ref = quad(lambda x: eco_fun(x,N_ref)/2,-1,1)[0] 
-    EF_change = quad(lambda x: eco_fun(x,N_change)/2,-1,1)[0]
-    return 100*(EF_change-EF_ref)/EF_ref #multiply by 100 for percent

@@ -1,31 +1,20 @@
 """
 @author: J.W. Spaak
-Contains all functions, that are needed to generate communities as well as
-compute the EF of those communities
+Contains a non vectorized version of rand_par an coex_test
 
 Contains the same functions as community_construction_coex, but does so for
 the replacing community structure
 
-
 """
 
 import numpy as np
-import pickle
 
 from numpy.random import uniform as uni
-from scipy.integrate import quad
 
-#load the communities
-try:
-    para = pickle.load(open("repl, com_para.p", "rb"))
-except FileNotFoundError: #other functions should be still be available
-    def error():
-        raise FileNotFoundError("No such file or directory: 'repl, com_para.p'"
-            "\nPlease run the file 'parameters of communities.py "+
-            "to create this file. Read the readme for further instructions.")
 
 sqrt = np.sqrt(3) #is needed often in the program
-n = 20
+n = 20 #number of species in each community
+
 def rand_par(p = 'rand', ave_max = 0.5, e_max = 1,
                   ave_min = -0.5, e_min = -1):
     """ returns randomized parameters for one community
@@ -155,67 +144,3 @@ def coex_test(mu, e,f,comp,alpha,p):
         return False
     else:
         return True
-    
-def EF_fun(mu,f,alpha,p,s,cov,adjust=1):
-    """ computes the EF of the given system
-    
-    For computational background see Eq. 6"""
-    q = 1-p
-    comp = -alpha*n/(1-alpha*(n-1))
-    EF1 = n*f['avb']*mu['avb'+s[1]]/(1+alpha)*(cov['b'+s[1]]+1-comp)
-    EF2 = n*f['av'+s[0]]*mu['av'+s[0]+s[1]]/(1+alpha)*(cov[s[0]+s[1]]+1-comp)
-    return p*EF1+q*EF2+adjust*p*q*n*comp/(1+alpha)*(f['avb']-f['av'+s[0]])\
-                            *(mu['avb'+s[1]]-mu['av'+s[0]+s[1]])
-
-    
-def delta_EF_lin(mu, e,f,comp,alpha,p, adjust = 1):
-    """computes \DeltaEF/EF in the case of changing composition
-    
-    For computational background see Eq. 7
-    
-    adjust can be set to 0 to see the effect of the adjustmentterms"""
-    #covariances of the relative distributions
-    cov = {'b': mu['tb']*f['tb'], 'u': mu['tu']*f['tu']} 
-    cov['b_change'] = f['tb']*(mu['tb']*(1/e['avb']-1)-e['tb'])\
-                        /(1/e['avb']-1-e['tb']*mu['tb'])
-    cov['c_change'] = f['tc']*(mu['tc']*(1/e['avc']-1)-e['tc'])\
-                        /(1/e['avc']-1-e['tc']*mu['tc'])
-
-    EF_u = EF_fun(mu,f,alpha,p,['u',''],cov,adjust)
-
-    EF_c = EF_fun(mu,f,alpha,p,['c','_change'],cov,adjust)
-    return 100*(EF_c-EF_u)/EF_u #multiply by 100, result in percent
-    
-def delta_EF_asym(mu, e,f,comp,alpha,p, max_ave_H=1):
-    """computes the EF with asymptotic f, f(N) = f_i*H_i*N_i/(N_i+H_i)
-    
-    mu, e,f,comp,alpha,p should be the return values of rand_par_repl
-    max_ave_H is the maximum value for average value for  H.
-    H_i is uniformly distributed in [0,2*ave_H*mu['av']]"""
-    # choose distributions of H: H ~u[0,2*ave]
-    temp = uni(0,max_ave_H,3)
-    gam = {'avb':temp[0],'avu':temp[1],'avc':temp[2]}
-    temp = uni(-1/sqrt, 1/sqrt,3)
-    gam.update({'tb':temp[0],'tu':temp[1],'tc':temp[2]})
-    H = lambda x,t: gam['av'+t]*(1+gam['t'+t]*sqrt*x)\
-                    *mu['av'+t]*(1+mu['t'+t]*x*sqrt)
-    #asymptotic EF in N, f(N) = f_i*H_i*N_i/(N_i+H_i)
-    eco_fun = lambda x,t, N: f['av'+t]*(1+f['t'+t]*x*sqrt)*H(x,t)*N(x,t)\
-                                   /(N(x,t)+H(x,t))
-    
-    # growthrates in different sites
-    mu_ref = lambda x,t: mu['av'+t]*(1+x*sqrt*mu['t'+t])
-    mu_change = lambda x,t: mu['av'+t]*(1+x*sqrt*mu['t'+t])*\
-                            (1-e['av'+t]*(1+e['t'+t]*sqrt*x))
-    # computes the equilibrium densities of species N, in changed and ref site
-    N = lambda x,t,mu,avmu: (mu(x,t)-comp*avmu)/(1+alpha)
-    N_ref = lambda x,t: N(x,t,mu_ref,p*mu['avb']+(1-p)*mu['avu'])
-    N_change = lambda x,t: N(x,t,mu_change,mu['av_change'])
-    
-    # Integrate for the average, divide by 2 for normalisation
-    EF_ref = n*(p*quad(lambda x: eco_fun(x,'b',N_ref)/2,-1,1)[0]\
-            +(1-p)*quad(lambda x: eco_fun(x,'u',N_ref)/2,-1,1)[0])
-    EF_change = n*(p*quad(lambda x: eco_fun(x,'b',N_change)/2,-1,1)[0]\
-            +(1-p)*quad(lambda x: eco_fun(x,'c',N_change)/2,-1,1)[0])
-    return 100*(EF_change-EF_ref)/EF_ref #multiply by 100 for percent
-
