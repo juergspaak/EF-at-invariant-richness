@@ -28,8 +28,8 @@ def bars(datas,keys, fig = None, ax = None, col = ['red', 'green'],
         per_neg[str(per)] = []
         for key in keys:
             # append the percentiles
-            per_pos[str(per)].append(np.percentile(datas['e>0,'+key], per))
-            per_neg[str(per)].append(np.percentile(datas['e<0,'+key], per))
+            per_pos[str(per)].append(np.percentile(datas['e<0,'+key], per))
+            per_neg[str(per)].append(np.percentile(datas['e>0,'+key], per))
         #convert to array
         per_pos[str(per)] = np.array(per_pos[str(per)])
         per_neg[str(per)] = np.array(per_neg[str(per)])
