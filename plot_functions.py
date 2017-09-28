@@ -5,7 +5,7 @@ This program contains fucntions for plotting
 import matplotlib.pyplot as plt
 import numpy as np
 
-def bars(datas,keys, fig = None, ax = None, col = ['red', 'green'],
+def bars(datas,keys, fig = None, ax = None, col = ['green', 'red'],
          leg = 'upper right'):
     """ plots boxplots for all data sets in datas
     

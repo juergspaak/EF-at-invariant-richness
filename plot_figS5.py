@@ -15,9 +15,9 @@ EF_data_dif = {key: repl.delta_EF_lin(*repl.para[key], sim_f = False)
 
 # plot results
 keys = ['0.95', '0.75', '0.50','0.25', '0.05']
-cols = ['#CF0000', '#90FB90','#800000', '#006400']
+cols = ['#006400','#CF0000', '#90FB90', '#800000']
 # plot the delta EF communities with same f
-fig, ax, ind = bars(EF_data, keys, col =cols[:2])
+fig, ax, ind = bars(EF_data, keys, col = cols[:2])
 # add the deltaEF of the different f communities
 fig, ax, ind = bars(EF_data_dif, keys, fig, ax, col = cols[2:])
 
@@ -31,7 +31,7 @@ ax.set_ylim([-80,140]) # add enough space for the legend
 # add legend            
 legend = {col: ax.bar(0,0,width = 0 ,color = 'white'
                       ,edgecolor=col,linewidth=1.5) for col in cols}
-lab = ['e>0, same f', 'e<0, same f', 'e>0, diff f', 'e<0, diff f']
+lab = ['e<0, same f', 'e>0, same f', 'e<0, diff f', 'e>0, diff f']
 ax.legend([legend[col] for col in cols],lab, loc = 'upper left')
 
 # save figure
